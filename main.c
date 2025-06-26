@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-
+#define f1 4
+#define f2 5
 
 typedef struct {
         int registarska_oznaka;
@@ -19,11 +20,20 @@ typedef struct {
 
     } parkiranje;
 
+typedef struct {
+        automobil automobili[f1];
+        int indeks;
+    } BLOK_automobila;
+
+typedef struct {
+        parkiranje parkinga[f2];
+        int indeks;
+    } BLOK_parkinga;
+
+
 
 FILE *otvori_datoteku(const char *ime_datoteke, const char *mod);
-FILE *kreiraj_prazne_evidencije(const char *ime_datoteke_automobila, const char *ime_datoteke_parkinga, const int f1, const int f2);
-
-
+FILE *kreiraj_prazne_evidencije(const char *ime_datoteke_automobila);
 
 int main()
 {
@@ -59,20 +69,18 @@ FILE *otvori_datoteku(const char *ime_datoteke, const char *mod)
     return datoteka;
 }
 
-//f1 i f2 su faktori blokiranja, koji se koriste za određivanje veličine blokova u datotekama
-//pored kreiranja trbe ada inicijalizuje i prvi prazan blok
-FILE *kreiraj_prazne_evidencije(const char *ime_datoteke_automobila, const char *ime_datoteke_parkinga, const int f1, const int f2){
+FILE *kreiraj_praznu_evidenciju(const char *ime_datoteke_automobila){
     FILE *datoteka_automobila = otvori_datoteku(ime_datoteke_automobila, "wb");
-    FILE *datoteka_parkinga = otvori_datoteku(ime_datoteke_parkinga, "wb");
 
-    // Dodavanje inicijalnog bloka
-    automobil prazni_automobili[4] = {0};
-    parkiranje prazni_parking[4] = {0};
-
-    fwrite(prazni_automobili, sizeof(automobil), 4, datoteka_automobila);
-    fwrite(prazni_parking, sizeof(parkiranje), 4, datoteka_parkinga);
-
+    automobil automobil = {0, "", "", {0}, ""};
+    BLOK_automobila blok_automobila;
+    for (int i = 0; i < f1; i++) {
+        blok_automobila.automobili[i] = automobil;
+    }
     
+
+    fwrite(&blok_automobila, sizeof(blok_automobila), 1, datoteka_automobila);
+
     return datoteka_automobila;
     
 }
