@@ -4,13 +4,19 @@
 #define f1 4
 #define f2 5
 
+typedef enum {
+    PRAZAN = 0,
+    POPUNJEN = 1,
+    OBRISAN = 2
+} Status_sloga;
+
 typedef struct {
         int registarska_oznaka;
         char marka[31];
         char model[31];
         int godina_proizvodnje[4];
         char boja[21];
-        bool prazan_slog;
+        Status_sloga prazan_slog;
     } automobil;
 
 typedef struct {
@@ -19,7 +25,7 @@ typedef struct {
         char datum_vremena[17];
         int duzina_boravka;
         char zona[7];
-        bool prazan_slog;
+        Status_sloga prazan_slog;
 
     } parkiranje;
 
@@ -215,19 +221,40 @@ void upis_parkiranja(FILE *datoteka_parkiranja, parkiranje novo_parkiranje) {
 }
 
 void ispisi_automobil(FILE *datoteka_automobila, int registarska_oznaka) {
-    //pronađi automobil po registarskoj oznaci
     BLOK_automobila blok_automobila;
     rewind(datoteka_automobila);    
     while (fread(&blok_automobila, sizeof(BLOK_automobila), 1, datoteka_automobila) == 1) {
         for (int i = 0; i < f1; i++) {
             if (!blok_automobila.automobili[i].prazan_slog && blok_automobila.automobili[i].registarska_oznaka == registarska_oznaka) {
-                blok_automobila.automobili[i].prazan_slog = false;
+                printf("Boja: %s\n", blok_automobila.automobili[i].boja);
+                printf("Marka: %s\n", blok_automobila.automobili[i].marka);
+                printf("Adresa bloka: %p\n", &blok_automobila);
+                printf("Redni broj sloga u bloku: %d\n", i);
                 
                 return;
             }
         }
+        printf("Automobil sa registarskom oznakom %d nije pronađen.\n", registarska_oznaka);
     }
 }
 
-
-
+void prikaz_automobila(FILE *datoteka_automobila) {
+    BLOK_automobila blok_automobila;
+    rewind(datoteka_automobila);
+    while (fread(&blok_automobila, sizeof(BLOK_automobila), 1, datoteka_automobila) == 1) {
+        for (int i = 0; i < f1; i++) {
+            if (!blok_automobila.automobili[i].prazan_slog) {
+                printf("Registarska oznaka: %d\n", blok_automobila.automobili[i].registarska_oznaka);
+                printf("Marka: %s\n", blok_automobila.automobili[i].marka);
+                printf("Model: %s\n", blok_automobila.automobili[i].model);
+                printf("Godina proizvodnje: %d%d%d%d\n", 
+                       blok_automobila.automobili[i].godina_proizvodnje[0],
+                       blok_automobila.automobili[i].godina_proizvodnje[1],
+                       blok_automobila.automobili[i].godina_proizvodnje[2],
+                       blok_automobila.automobili[i].godina_proizvodnje[3]);
+                printf("Boja: %s\n", blok_automobila.automobili[i].boja);
+                printf("-------------------------\n");
+            }
+        }
+    }
+}
