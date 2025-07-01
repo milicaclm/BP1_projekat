@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 #include "deo1.c"
 #define f1 4
 #define f2 5
@@ -19,9 +20,12 @@ int main()
         printf("2. Kreiraj evidenciju parkiranja\n");
         printf("3. Upis novog automobila\n");
         printf("4. Upis novog parkiranja\n");
+        printf("5. Ispis automobila po registarskoj oznaci\n");
+        printf("6. Prikaz svih automobila\n");
+        printf("7. Modifikacija automobila\n");
         printf("0. Izlaz\n");
         printf("Unesite opciju: ");
-        char opcija_str[16];
+        char opcija_str[3];
         fgets(opcija_str, sizeof(opcija_str), stdin);
         opcija = atoi(opcija_str);
         
@@ -32,6 +36,7 @@ int main()
                 while (fgets(ime_datoteke_automobila, sizeof(ime_datoteke_automobila), stdin) == NULL || ime_datoteke_automobila[0] == '\n')
                     printf("Ime datoteke ne sme biti prazno. Unesite ponovo: ");
                 ime_datoteke_automobila[strcspn(ime_datoteke_automobila, "\n")] = 0;
+                strcat(ime_datoteke_automobila, ".dat");
                 datoteka_automobila = kreiraj_praznu_evidenciju_automobila(ime_datoteke_automobila);
                 break;
 
@@ -40,6 +45,7 @@ int main()
                 while (fgets(ime_datoteke_parkiranja, sizeof(ime_datoteke_parkiranja), stdin) == NULL || ime_datoteke_parkiranja[0] == '\n')
                     printf("Ime datoteke ne sme biti prazno. Unesite ponovo: ");
                 ime_datoteke_parkiranja[strcspn(ime_datoteke_parkiranja, "\n")] = 0;
+                strcat(ime_datoteke_parkiranja, ".dat");
                 datoteka_parkiranja = kreiraj_praznu_evidenciju_parkinga(ime_datoteke_parkiranja);
                 break;
 
