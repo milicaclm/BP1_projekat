@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "deo1.c"
+#include "deo2.c"
 #define f1 4
 #define f2 5
 
@@ -25,15 +26,15 @@ int main()
         printf("7. Modifikacija automobila\n");
         printf("0. Izlaz\n");
         printf("Unesite opciju: ");
-        char opcija_str[3];
-        fgets(opcija_str, sizeof(opcija_str), stdin);
-        opcija = atoi(opcija_str);
-        
+        int opcija;
+        scanf("%d", &opcija);
+        while(getchar() != '\n');
+
         switch (opcija)
         {
             case 1:
                 printf("Unesite ime datoteke za evidenciju automobila: ");
-                while (fgets(ime_datoteke_automobila, sizeof(ime_datoteke_automobila), stdin) == NULL || ime_datoteke_automobila[0] == '\n')
+                while (scanf("%30s", ime_datoteke_automobila) != 1)
                     printf("Ime datoteke ne sme biti prazno. Unesite ponovo: ");
                 ime_datoteke_automobila[strcspn(ime_datoteke_automobila, "\n")] = 0;
                 strcat(ime_datoteke_automobila, ".dat");
@@ -42,7 +43,7 @@ int main()
 
             case 2:
                 printf("Unesite ime datoteke za evidenciju parkiranja: ");
-                while (fgets(ime_datoteke_parkiranja, sizeof(ime_datoteke_parkiranja), stdin) == NULL || ime_datoteke_parkiranja[0] == '\n')
+                while (scanf("%30s", ime_datoteke_parkiranja) != 1)
                     printf("Ime datoteke ne sme biti prazno. Unesite ponovo: ");
                 ime_datoteke_parkiranja[strcspn(ime_datoteke_parkiranja, "\n")] = 0;
                 strcat(ime_datoteke_parkiranja, ".dat");
