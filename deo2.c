@@ -19,13 +19,25 @@ sloga  u  baketu,  ukoliko  je  slog  prekoračilac  prikazati  informaciju,  a 
 rezultata prazan potrebno je prikazati povratnu informaciju na standardnom izlazu; 
 6.  logičko brisanje aktuelnog sloga iz aktivne datoteke;*/
 
-#define B 9
-#define k 1
-#define b 5
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#define B 9
+#define k 1
+#define b 5
+
+typedef struct {
+    int registarska_oznaka;
+    char marka[31];
+    char model[31];
+    int godina_proizvodnje;
+    char boja[21];
+    int duz_bela;
+    int duz_crvena;
+    int duz_plava;
+} Automobil;
+
 
 FILE *otvori_datoteku(const char *ime_datoteke, const char *mod) {
     FILE *datoteka = fopen(ime_datoteke, mod);
@@ -35,6 +47,4 @@ FILE *otvori_datoteku(const char *ime_datoteke, const char *mod) {
     }
     return datoteka;
 }
-
-
 
