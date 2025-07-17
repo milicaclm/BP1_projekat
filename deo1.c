@@ -30,7 +30,7 @@ typedef struct {
         char model[31];
         int godina_proizvodnje;
         char boja[21];
-    } automobil;
+    } Automobil;
 
 typedef struct {
         int identifikator;
@@ -38,20 +38,20 @@ typedef struct {
         char datum_vreme[17];
         int duzina_boravka;
         char zona[7];
-    } parkiranje;
+    } Parkiranje;
 
 typedef struct {
-        automobil automobili[f1];
+        Automobil automobili[f1];
         int index;
     } BLOK_automobila;
 
 typedef struct {
-        parkiranje parkinga[f2];
+        Parkiranje parkinga[f2];
         int index;
     } BLOK_parkiranja;
 
-automobil default_automobil = {0, "", "", 0, "", false};
-parkiranje default_parkiranje = {0, 0, "", 0, "", false};
+Automobil default_automobil = {0, "", "", 0, "", false};
+Parkiranje default_parkiranje = {0, 0, "", 0, "", false};
 
 FILE *otvori_datoteku(const char *ime_datoteke, const char *mod)
 {
@@ -63,7 +63,7 @@ FILE *otvori_datoteku(const char *ime_datoteke, const char *mod)
     return datoteka;
 }
 
-void dodaj_prazan_blok_automobila(FILE *datoteka_automobila, automobil slog_za_dodavanje) {
+void dodaj_prazan_blok_automobila(FILE *datoteka_automobila, Automobil slog_za_dodavanje) {
     BLOK_automobila blok_automobila;
     blok_automobila.automobili[0] = slog_za_dodavanje;
     for (int i = 1; i < f1; i++) {
@@ -76,7 +76,7 @@ void dodaj_prazan_blok_automobila(FILE *datoteka_automobila, automobil slog_za_d
 
 }
 
-void dodaj_prazan_blok_parkiranja(FILE *datoteka_parkiranja, parkiranje *slog_za_dodavanje) {
+void dodaj_prazan_blok_parkiranja(FILE *datoteka_parkiranja, Parkiranje *slog_za_dodavanje) {
     BLOK_parkiranja blok_parkiranja;
     blok_parkiranja.parkinga[0] = *slog_za_dodavanje;
     for (int i = 1; i < f2; i++) {
@@ -140,7 +140,7 @@ bool identifikator_postoji(FILE *datoteka_parkiranja, int identifikator) {
 }
 
 void upis_automobila(FILE *datoteka_automobila) {
-    automobil novi_automobil = default_automobil;
+    Automobil novi_automobil = default_automobil;
     bool postoji = false;
     do
     {
@@ -203,7 +203,7 @@ void upis_automobila(FILE *datoteka_automobila) {
 
             if(novi_automobil.registarska_oznaka < blok_automobila.automobili[i].registarska_oznaka) {
                 int j=i;
-                automobil temp, sledeci_slog = novi_automobil;
+                Automobil temp, sledeci_slog = novi_automobil;
 
                 do{
                     fseek(datoteka_automobila, -(long)sizeof(BLOK_automobila), SEEK_CUR);
@@ -250,7 +250,7 @@ bool format_datuma_vremena(int godina, int mesec, int dan, int sat, int minut) {
 }
 
 void upis_parkiranja(FILE *datoteka_parkiranja, FILE *datoteka_automobila) {
-    parkiranje novo_parkiranje;
+    Parkiranje novo_parkiranje;
     do
     {
         printf("Unesite identifikator: ");

@@ -66,7 +66,7 @@ int hash_funkcija(int registarska_oznaka) {
 void kreiraj_praznu_evidenciju(FILE *datoteka) {
     Baket prazni_baket;
     for (int i = 0; i < b; i++) {
-        prazni_baket.automobili[i] = default_automobil;
+        prazni_baket.automobili[i] = default_parkirani_automobil;
     }
     for (int i = 0; i < B; i++) {
         prazni_baket.index = ++index_baketa;
@@ -75,14 +75,62 @@ void kreiraj_praznu_evidenciju(FILE *datoteka) {
     fflush(datoteka);
 }
 
-Parkirani_automobil popuni_podatke_automobila(FILE *datoteka_parkiranja, automobil automobil) {
+Parkirani_automobil popuni_podatke_automobila(FILE *datoteka_parkiranja, Automobil automobil) {
     Parkirani_automobil parkirani_automobil;
-    /*na osnovu registarske oznake pronadji i popuni podatke u Parkirani_automobil koristeći datoteka_automobila*/
-    FILE *datoteka_automobila = otvori_datoteku("datoteka_automobila.txt", "r");
+    parkirani_automobil.registarska_oznaka = automobil.registarska_oznaka;
+    strcpy(parkirani_automobil.marka, automobil.marka);
+    strcpy(parkirani_automobil.model, automobil.model);
+    parkirani_automobil.godina_proizvodnje = automobil.godina_proizvodnje;
+    strcpy(parkirani_automobil.boja, automobil.boja);
+    rewind(datoteka_parkiranja);
+    Parkiranje parkiranje;
+    while (fread(&parkiranje, sizeof(parkiranje), 1, datoteka_parkiranja)) {
+        if (parkiranje.registarska_oznaka != automobil.registarska_oznaka) continue;
+
+        if (strcmp(parkiranje.zona, "BELA") == 0) {
+            parkirani_automobil.duz_bela += parkiranje.duzina_boravka;
+        } else if (strcmp(parkiranje.zona, "CRVENA") == 0) {
+            parkirani_automobil.duz_crvena += parkiranje.duzina_boravka;
+        } else if (strcmp(parkiranje.zona, "PLAVA") == 0) {
+            parkirani_automobil.duz_plava += parkiranje.duzina_boravka;
+        } else {
+            printf("Nepoznata zona: %s\n", parkiranje.zona);
+        }
+        
+    }
+
     return parkirani_automobil;
 }
 
-void upis_automobila(FILE *datoteka, FILE *datoteka_automobila, FILE *datoteka_parkiranja) {
+void upis_svih_automobila(FILE *datoteka, FILE *datoteka_automobila, FILE *datoteka_parkiranja) {
     Baket trenutni_baket;
-    //procitaj automobil iz datoteka_automobila i za svaki automobil pronadji ostale podatke tako da popunis Parkirani_automobil
+    Automobil trenutni_automobil;
+    BLOK_automobila blok_automobila;
+    rewind(datoteka_automobila);
+    rewind(datoteka);
+
+    while (fread(&blok_automobila, sizeof(BLOK_automobila), 1, datoteka_automobila) == 1) {
+        for (int i = 0; i < f1; i++) {
+            if (blok_automobila.automobili[i].registarska_oznaka == 0) continue;
+
+            trenutni_automobil = blok_automobila.automobili[i];
+            Parkirani_automobil parkirani_automobil = popuni_podatke_automobila(datoteka_parkiranja, trenutni_automobil);
+            int indeks = hash_funkcija(parkirani_automobil.registarska_oznaka);
+
+            fseek(datoteka, indeks * sizeof(Baket), SEEK_SET);
+            fread(&trenutni_baket, sizeof(Baket), 1, datoteka);
+
+            for (int j = 0; j < b; j++) {
+                if (trenutni_baket.automobili[j].registarska_oznaka == 0) {
+                    trenutni_baket.automobili[j] = parkirani_automobil;
+                    trenutni_baket.index = ++index_baketa;
+                    fseek(datoteka, indeks * sizeof(Baket), SEEK_SET);
+                    fwrite(&trenutni_baket, sizeof(Baket), 1, datoteka);
+                    break;
+                }
+            }
+        }
+    }
+    
+    
 }
