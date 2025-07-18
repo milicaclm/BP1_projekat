@@ -28,10 +28,10 @@ int main()
             meni_deo1();
             break;
         case 2:
-            meni_deo2();
+            meni_deo1();
             break;
         case 3:
-            meni_deo3();
+            meni_deo1();
             break;
         default:
             break;
