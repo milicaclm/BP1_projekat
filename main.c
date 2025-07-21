@@ -12,6 +12,7 @@ int main()
     char opcija;
     FILE *datoteka_automobila = NULL;
     FILE *datoteka_parkiranja = NULL;
+    FILE *datoteka = NULL;
     char ime_datoteke_automobila[31];
     char ime_datoteke_parkiranja[31];
     while(1) {
@@ -25,13 +26,13 @@ int main()
         switch (opcija)
         {
         case 1:
-            meni_deo1();
+            meni_deo1(datoteka_automobila, datoteka_parkiranja);
             break;
         case 2:
-            meni_deo1();
+            meni_deo2(datoteka_automobila, datoteka_parkiranja, datoteka);
             break;
         case 3:
-            meni_deo1();
+            meni_deo1(datoteka_automobila, datoteka_parkiranja);
             break;
         default:
             break;

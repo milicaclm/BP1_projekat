@@ -464,10 +464,8 @@ void modifikacija_automobila(FILE *datoteka_automobila) {
 }
 
 
-void meni_deo1() {
+void meni_deo1(FILE *datoteka_automobila, FILE *datoteka_parkiranja) {
         char opcija;
-        FILE *datoteka_automobila = NULL;
-        FILE *datoteka_parkiranja = NULL;
         char ime_datoteke_automobila[31];
         char ime_datoteke_parkiranja[31];
         while(1) {
