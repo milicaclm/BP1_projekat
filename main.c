@@ -33,9 +33,6 @@ int main()
         case 2:
             meni_deo2(datoteka_automobila, datoteka_parkiranja, datoteka);
             break;
-        case 3:
-            meni_deo1(datoteka_automobila, datoteka_parkiranja);
-            break;
         case 0:
             fcloseall();
             oslobodi_resurse();
