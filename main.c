@@ -20,6 +20,8 @@ int main()
         printf("1. Kreiraj evidenciju automobila\n");
         printf("2. Kreiraj evidenciju parkiranja\n");
         printf("3. Upis novog automobila\n");
+        printf("0. Izlaz\n");
+        printf("Unesite opciju: ");
         scanf("%1hhd", &opcija);
         while(getchar() != '\n');
         
@@ -34,6 +36,11 @@ int main()
         case 3:
             meni_deo1(datoteka_automobila, datoteka_parkiranja);
             break;
+        case 0:
+            fcloseall();
+            oslobodi_resurse();
+            printf("Izlaz iz programa.\n");
+            exit(0);
         default:
             break;
         }
