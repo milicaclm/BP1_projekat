@@ -10,15 +10,21 @@ int main()
 {
 
     char opcija;
+    /*
     FILE *datoteka_automobila = NULL;
     FILE *datoteka_parkiranja = NULL;
     FILE *datoteka = NULL;
+    */
+    FILE *datoteka_automobila = otvori_datoteku("automobili.dat", "rb+");
+    FILE *datoteka_parkiranja = otvori_datoteku("parkiranja.dat", "rb+");
+    FILE *datoteka = otvori_datoteku("parkiranja_automobila.dat", "rb+");
+
     char ime_datoteke_automobila[31];
     char ime_datoteke_parkiranja[31];
     while(1) {
         printf("Izaberite opciju:\n");
-        printf("1. Kreiraj evidenciju automobila\n");
-        printf("2. Kreiraj evidenciju parkiranja\n");
+        printf("1. Upravljaj evidencijama automobila i parkiranja\n");
+        printf("2. Upravljaj evidencijom parkiranja automobila\n");
         printf("0. Izlaz\n");
         printf("Unesite opciju: ");
         scanf("%1hhd", &opcija);

@@ -91,6 +91,9 @@ Parkirani_automobil vrati_podatke_parkiranog_automobila(FILE *datoteka_parkiranj
     strcpy(parkirani_automobil.boja, automobil.boja);
     rewind(datoteka_parkiranja);
     Parkiranje parkiranje;
+    parkirani_automobil.duz_bela = 0;
+    parkirani_automobil.duz_crvena = 0;
+    parkirani_automobil.duz_plava = 0;
     while (fread(&parkiranje, sizeof(parkiranje), 1, datoteka_parkiranja))
     {
         if (parkiranje.registarska_oznaka != automobil.registarska_oznaka)
@@ -164,7 +167,7 @@ Parkirani_automobil *prvi_prolaz(FILE *datoteka, FILE *datoteka_automobila, FILE
                 prekoracioci = (Parkirani_automobil *)realloc(prekoracioci, (index_prekoracioca + 20) * sizeof(Parkirani_automobil));
                 if (prekoracioci == NULL)
                 {
-                    perror("Reallocacija memorije nije uspela");
+                    perror("Realokacija memorije nije uspela");
                     exit(EXIT_FAILURE);
                 }
             }
@@ -182,7 +185,7 @@ void drugi_prolaz(FILE *datoteka)
     index_viska = 0;
     if (index_prekoracioca == 0)
     {
-        printf("Nema prekoračilaca.\n");
+        printf("Nema prekoracilaca.\n");
         return;
     }
     rewind(datoteka);
@@ -237,7 +240,7 @@ void drugi_prolaz(FILE *datoteka)
     
     if (index_viska > 0)
     {
-        printf("Prekoračili ste kapacitet baketa za sledeće automobile:\n");
+        printf("Prekoracili ste kapacitet baketa za sledece automobile:\n");
         for (int i = 0; i < index_viska; i++)
         {
             Parkirani_automobil pa = visak[i];
@@ -291,7 +294,7 @@ void upis_novog_sloga(FILE *datoteka)
         while (getchar() != '\n');
         if (novi_automobil.registarska_oznaka <= 0)
         {
-            printf("Registarska oznaka mora biti veća od 0. Pokušajte ponovo.\n");
+            printf("Registarska oznaka mora biti veca od 0. Pokusajte ponovo.\n");
             continue;
         }
     } while (novi_automobil.registarska_oznaka <= 0 || registarska_oznaka_postoji_rasuta(datoteka, novi_automobil.registarska_oznaka));
@@ -311,30 +314,33 @@ void upis_novog_sloga(FILE *datoteka)
     printf("Unesite boju automobila: ");
     scanf("%20s", novi_automobil.boja);
     while (getchar() != '\n'); 
+
+    //TODO: prihod duzina boravka nije dobar
+
     do {
-        printf("Unesite dužinu boravka u beloj zoni (u satima): ");
+        printf("Unesite duzinu boravka u beloj zoni (u satima): ");
         scanf("%d", &novi_automobil.duz_bela);
         while (getchar() != '\n');
         if (novi_automobil.duz_bela < 0) {
-            printf("Dužina boravka ne može biti negativna. Pokušajte ponovo.\n");
+            printf("Duzina boravka ne moze biti negativna. Pokusajte ponovo.\n");
         }
     } while (novi_automobil.duz_bela < 0);
 
     do {
-        printf("Unesite dužinu boravka u crvenoj zoni (u satima): ");
+        printf("Unesite duzinu boravka u crvenoj zoni (u satima): ");
         scanf("%d", &novi_automobil.duz_crvena);
         while (getchar() != '\n');
         if (novi_automobil.duz_crvena < 0) {
-            printf("Dužina boravka ne može biti negativna. Pokušajte ponovo.\n");
+            printf("Duzina boravka ne moze biti negativna. Pokusajte ponovo.\n");
         }
     } while (novi_automobil.duz_crvena < 0);
 
     do {
-        printf("Unesite dužinu boravka u plavoj zoni (u satima): ");
+        printf("Unesite duzinu boravka u plavoj zoni (u satima): ");
         scanf("%d", &novi_automobil.duz_plava);
         while (getchar() != '\n');
         if (novi_automobil.duz_plava < 0) {
-            printf("Dužina boravka ne može biti negativna. Pokušajte ponovo.\n");
+            printf("Duzina boravka ne moze biti negativna. Pokusajte ponovo.\n");
         }
     } while (novi_automobil.duz_plava < 0);
     novi_automobil.status = POPUNJEN;
@@ -375,18 +381,18 @@ void prikaz_duzine_bela_zona(FILE *datoteka, int registarska_oznaka) {
         fread(&trenutni_baket, sizeof(Baket), 1, datoteka);
         for (int i = 0; i < b; i++) {
             if (trenutni_baket.automobili[i].registarska_oznaka == registarska_oznaka) {
-                printf("Dužina boravka u beloj zoni: %d\n", trenutni_baket.automobili[i].duz_bela);
+                printf("Duzina boravka u beloj zoni: %d\n", trenutni_baket.automobili[i].duz_bela);
                 printf("Adresa baketa: %p\n", &trenutni_baket);
                 printf("Redni broj sloga u baketu: %d\n", i);
                 if (j > 0) {
-                    printf("Slog prekoračilac!\n");
+                    printf("Slog prekoracilac!\n");
                 }
                 return;
             }
         }
     }
 
-    printf("Automobil sa registarskom oznakom %d nije pronađen.\n", registarska_oznaka);
+    printf("Automobil sa registarskom oznakom %d nije pronadjen.\n", registarska_oznaka);
 }
 
 void prikaz_automobila_2024(FILE *datoteka) {
@@ -394,8 +400,9 @@ void prikaz_automobila_2024(FILE *datoteka) {
     bool pronadjen = false;
 
     printf("Automobili proizvedeni u 2024. godini:\n");
-    printf("Registarska oznaka\t|Marka\t|Model\t|Godina\t|Boja\t|Prihod\t|Adresa baketa\t|Redni broj sloga\t|Prekoracilac\n");
-    printf("-------------------------------------------------------------------------------------------------------------\n");
+    printf("%-20s | %-10s | %-10s | %-6s | %-10s | %-8s | %-15s | %-20s | %-12s\n",
+           "Registarska oznaka", "Marka", "Model", "Godina", "Boja", "Prihod", "Adresa baketa", "Redni broj sloga", "Prekoracilac");
+    printf("----------------------------------------------------------------------------------------------------------------------------------------\n");
 
     int prihod;
     for (int j = 0; j < B; j++) {
@@ -405,7 +412,7 @@ void prikaz_automobila_2024(FILE *datoteka) {
             if (trenutni_baket.automobili[i].godina_proizvodnje == 2024) {
                 prihod = trenutni_baket.automobili[i].duz_bela * 150 + trenutni_baket.automobili[i].duz_crvena * 120 + trenutni_baket.automobili[i].duz_plava * 80;
                 pronadjen = true;
-                printf("%d\t|%s\t|%s\t|%d\t|%s\t|%d\t|%p\t|%d\t|%s\n",
+                printf("%-20d | %-10s | %-10s | %-6d | %-10s | %-8d | %-15p | %-20d | %-12s\n",
                        trenutni_baket.automobili[i].registarska_oznaka,
                        trenutni_baket.automobili[i].marka,
                        trenutni_baket.automobili[i].model,
@@ -415,7 +422,7 @@ void prikaz_automobila_2024(FILE *datoteka) {
                        &trenutni_baket,
                        i,
                        (j > 0) ? "DA" : "NE");
-                printf("---------------------------------------------------------------------------------\n");
+                printf("----------------------------------------------------------------------------------------------------------------------------------------\n");
             }
         }
     }
@@ -438,7 +445,7 @@ void logicko_brisanje(FILE *datoteka, int registarska_oznaka) {
                 trenutni_baket.automobili[i].status = OBRISAN;
                 fseek(datoteka, -(long)sizeof(Baket), SEEK_CUR);
                 fwrite(&trenutni_baket, sizeof(Baket), 1, datoteka);
-                printf("Slog sa registarskom oznakom %d je uspešno obrisan.\n", registarska_oznaka);
+                printf("Slog sa registarskom oznakom %d je uspesno obrisan.\n", registarska_oznaka);
                 return;
             }
         }
@@ -453,15 +460,21 @@ void meni_deo2(FILE *datoteka_automobila, FILE *datoteka_parkiranja, FILE *datot
         printf("Izaberite opciju:\n");
         printf("1. Upis novih automobila\n");
         printf("2. Upis novog sloga\n");
-        printf("3. Prikaz dužine boravka u beloj zoni\n");
+        printf("3. Prikaz duzine boravka u beloj zoni\n");
         printf("4. Prikaz automobila proizvedenih u 2024. godini\n");
-        printf("5. Logičko brisanje sloga\n");
+        printf("5. Logicko brisanje sloga\n");
         printf("0. Nazad\n");
         printf("Unesite opciju: ");
         scanf(" %c", &opcija);
         while (getchar() != '\n');
         switch (opcija) {
             case '1':
+                char ime_datoteke[31];
+                printf("Unesite naziv datoteke: ");
+                while (fgets(ime_datoteke, sizeof(ime_datoteke), stdin) == NULL || ime_datoteke[0] == '\n');
+                ime_datoteke[strcspn(ime_datoteke, "\n")] = '\0'; // Ukloni novi red
+                strcat(ime_datoteke, ".dat");
+                datoteka = fopen(ime_datoteke, "wb+");
                 upis_svih_automobila(datoteka, datoteka_automobila, datoteka_parkiranja);
                 break;
             case '2':
@@ -489,7 +502,7 @@ void meni_deo2(FILE *datoteka_automobila, FILE *datoteka_parkiranja, FILE *datot
             case '0':
                 return;
             default:
-                printf("Nepoznata opcija. Pokušajte ponovo.\n");
+                printf("Nepoznata opcija. Pokusajte ponovo.\n");
         }
     }
 }

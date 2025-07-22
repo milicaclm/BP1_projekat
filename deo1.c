@@ -258,14 +258,15 @@ void upis_parkiranja(FILE *datoteka_parkiranja, FILE *datoteka_automobila) {
             printf("Registarska oznaka nije pronađena na spisku automobila.\n");
             return;
     }
-    printf("Unesite datum i vreme (npr. 2023-10-01 12:00): ");
+    printf("Unesite datum i vreme (npr. 15-5-2025 10:15): ");
     int godina, mesec, dan, sat, minut;
-    while (scanf("%4d-%2d-%2d %2d:%2d", &godina, &mesec, &dan, &sat, &minut) != 5 || !format_datuma_vremena(godina, mesec, dan, sat, minut)) {
+    while (scanf("%2d-%2d-%4d %2d:%2d", &dan, &mesec, &godina, &sat, &minut) != 5 || !format_datuma_vremena(godina, mesec, dan, sat, minut)) {
+
         printf("Neispravan format ili nepostojeci datum. Pokusajte ponovo: ");
         while (getchar() != '\n');
     }
     while(getchar() != '\n');
-    sprintf(novo_parkiranje.datum_vreme, "%04d-%02d-%02d %02d:%02d", godina, mesec, dan, sat, minut);
+    sprintf(novo_parkiranje.datum_vreme, "%2d-%2d-%4d %02d:%02d", dan, mesec, godina, sat, minut);
     while(getchar() != '\n');
     printf("Unesite duzinu boravka (u satima): ");
     scanf("%d", &novo_parkiranje.duzina_boravka);
@@ -510,8 +511,7 @@ void meni_deo1(FILE *datoteka_automobila, FILE *datoteka_parkiranja) {
                 break;
 
             case 0:
-                fcloseall();
-                exit(0);
+                return;
             default:
                 break;
         }
