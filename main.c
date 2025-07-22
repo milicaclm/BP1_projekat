@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include "deo1.c"
+#include "deo2.c"
 #define f1 4
 #define f2 5
 
@@ -19,7 +19,6 @@ int main()
         printf("Izaberite opciju:\n");
         printf("1. Kreiraj evidenciju automobila\n");
         printf("2. Kreiraj evidenciju parkiranja\n");
-        printf("3. Upis novog automobila\n");
         printf("0. Izlaz\n");
         printf("Unesite opciju: ");
         scanf("%1hhd", &opcija);
@@ -35,7 +34,6 @@ int main()
             break;
         case 0:
             fcloseall();
-            oslobodi_resurse();
             printf("Izlaz iz programa.\n");
             exit(0);
         default:

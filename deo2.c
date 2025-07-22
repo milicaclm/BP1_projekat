@@ -62,17 +62,6 @@ int index_viska = 0;
 
 Parkirani_automobil default_parkirani_automobil = {0, "", "", 0, "", 0, 0, 0, PRAZAN};
 
-FILE *otvori_datoteku(const char *ime_datoteke, const char *mod)
-{
-    FILE *datoteka = fopen(ime_datoteke, mod);
-    if (datoteka == NULL)
-    {
-        perror("Otvaranje datoteke nije uspelo!");
-        exit(EXIT_FAILURE);
-    }
-    return datoteka;
-}
-
 int hash_funkcija(int registarska_oznaka)
 {
     return (registarska_oznaka % B);
@@ -270,7 +259,7 @@ void upis_svih_automobila(FILE *datoteka, FILE *datoteka_automobila, FILE *datot
     free(visak);
 }
 
-bool registarska_oznaka_postoji(FILE *datoteka, int registarska_oznaka)
+bool registarska_oznaka_postoji_rasuta(FILE *datoteka, int registarska_oznaka)
 {
     Baket trenutni_baket;
     int indeks = hash_funkcija(registarska_oznaka);
@@ -305,7 +294,7 @@ void upis_novog_sloga(FILE *datoteka)
             printf("Registarska oznaka mora biti veća od 0. Pokušajte ponovo.\n");
             continue;
         }
-    } while (novi_automobil.registarska_oznaka <= 0 || registarska_oznaka_postoji(datoteka, novi_automobil.registarska_oznaka));
+    } while (novi_automobil.registarska_oznaka <= 0 || registarska_oznaka_postoji_rasuta(datoteka, novi_automobil.registarska_oznaka));
 
     printf("Unesite marku automobila: ");
     scanf("%30s", novi_automobil.marka);
@@ -367,7 +356,7 @@ void upis_novog_sloga(FILE *datoteka)
                 trenutni_baket.automobili[j] = novi_automobil;
                 fseek(datoteka, -(long)sizeof(Baket), SEEK_CUR);
                 fwrite(&trenutni_baket, sizeof(Baket), 1, datoteka);
-                fflush(datoteka);
+                
                 printf("Novi slog uspešno upisan.\n");
                 return;
             }
