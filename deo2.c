@@ -315,7 +315,6 @@ void upis_novog_sloga(FILE *datoteka)
     scanf("%20s", novi_automobil.boja);
     while (getchar() != '\n'); 
 
-    //TODO: prihod duzina boravka nije dobar
 
     do {
         printf("Unesite duzinu boravka u beloj zoni (u satima): ");
@@ -347,12 +346,13 @@ void upis_novog_sloga(FILE *datoteka)
 
     int indeks = hash_funkcija(novi_automobil.registarska_oznaka);
     Baket trenutni_baket;
-    fseek(datoteka, indeks * sizeof(Baket), SEEK_SET);
-    fread(&trenutni_baket, sizeof(Baket), 1, datoteka);
 
     for (int i = 0; i < B; i++)
     {
         indeks = (hash_funkcija(novi_automobil.registarska_oznaka) + i * k) % B;
+        if(i > 0 && indeks == hash_funkcija(novi_automobil.registarska_oznaka)){
+            break;
+        }
         fseek(datoteka, indeks * sizeof(Baket), SEEK_SET);
         fread(&trenutni_baket, sizeof(Baket), 1, datoteka);
         for (int j = 0; j < b; j++)
@@ -364,11 +364,12 @@ void upis_novog_sloga(FILE *datoteka)
                 fwrite(&trenutni_baket, sizeof(Baket), 1, datoteka);
                 
                 printf("Novi slog uspešno upisan.\n");
+                fflush(datoteka);
                 return;
             }
         }
     }
-    printf("Baket je pun, ne može se uneti novi slog.\n");
+    printf("Datoteka je puna, ne može se uneti novi slog.\n");
 }
 
 void prikaz_duzine_bela_zona(FILE *datoteka, int registarska_oznaka) {

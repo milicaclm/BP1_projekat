@@ -135,7 +135,7 @@ bool identifikator_postoji(FILE *datoteka_parkiranja, int identifikator) {
     return false; 
 }
 
-void upis_automobila(FILE *datoteka_automobila) {
+Automobil upis_automobila(FILE *datoteka_automobila) {
     Automobil novi_automobil = default_automobil;
     bool postoji = false;
     do
@@ -207,7 +207,7 @@ void upis_automobila(FILE *datoteka_automobila) {
                             blok_automobila.automobili[j] = sledeci_slog;
                             fwrite(&blok_automobila, sizeof(BLOK_automobila), 1, datoteka_automobila);
                             fflush(datoteka_automobila);
-                            return;
+                            return novi_automobil;
                         }
                         temp = blok_automobila.automobili[j];
                         blok_automobila.automobili[j] = sledeci_slog;
@@ -218,11 +218,13 @@ void upis_automobila(FILE *datoteka_automobila) {
                 } while(fread(&blok_automobila,sizeof(BLOK_automobila), 1, datoteka_automobila)==1);
                 dodaj_prazan_blok_automobila(datoteka_automobila, sledeci_slog);
                 fflush(datoteka_automobila);
-                return;
+                return novi_automobil;
             }
         } 
     } 
     dodaj_prazan_blok_automobila(datoteka_automobila, novi_automobil);
+    fflush(datoteka_automobila);
+    return novi_automobil;
 }
 
 bool format_datuma_vremena(int godina, int mesec, int dan, int sat, int minut) {
