@@ -18,10 +18,9 @@ int main()
     FILE *datoteka_automobila = otvori_datoteku("automobili.dat", "rb+");
     FILE *datoteka_parkiranja = otvori_datoteku("parkiranja.dat", "rb+");
     FILE *datoteka = otvori_datoteku("parkiranja_automobila.dat", "rb+");
-    FILE *datoteka_log = otvori_datoteku("log.dat", "rb+");
+    FILE *datoteka_log = NULL; //otvori_datoteku("log.dat", "rb+");
 
-    char ime_datoteke_automobila[31];
-    char ime_datoteke_parkiranja[31];
+
 
     void meni_deo1(FILE *datoteka_automobila, FILE *datoteka_parkiranja, FILE *datoteka, FILE *datoteka_log);
     void meni_deo2(FILE *datoteka_automobila, FILE *datoteka_parkiranja, FILE *datoteka);
@@ -31,20 +30,24 @@ int main()
         printf("Izaberite opciju:\n");
         printf("1. Upravljaj evidencijama automobila i parkiranja\n");
         printf("2. Upravljaj evidencijom parkiranja automobila\n");
+        printf("3. Upravljaj log datotekom\n");
         printf("0. Izlaz\n");
         printf("Unesite opciju: ");
-        scanf("%1hhd", &opcija);
+        scanf("%c", &opcija);
         while(getchar() != '\n');
         
         switch (opcija)
         {
-        case 1:
+        case '1':
             meni_deo1(datoteka_automobila, datoteka_parkiranja, datoteka, datoteka_log);
             break;
-        case 2:
+        case '2':
             meni_deo2(datoteka_automobila, datoteka_parkiranja, datoteka);
             break;
-        case 0:
+        case '3':
+            meni_deo3(datoteka, datoteka_log);
+            break;
+        case '0':
             fcloseall();
             printf("Izlaz iz programa.\n");
             exit(0);
@@ -70,16 +73,18 @@ void meni_deo1(FILE *datoteka_automobila, FILE *datoteka_parkiranja, FILE *datot
             printf("4. Ispis automobila po registarskoj oznaci\n");
             printf("5. Prikaz svih automobila\n");
             printf("6. Modifikacija automobila\n");
+            printf("7. Ispis datoteke automobila\n");
+            printf("8. Ispis datoteke parkiranja\n");
             printf("0. Nazad\n");
             printf("Unesite opciju: ");
-            scanf("%1hhd", &opcija);
+            scanf("%c", &opcija);
             while(getchar() != '\n');
             
             
         
         switch (opcija)
         {
-            case 1:
+            case '1':
                 printf("Unesite ime datoteke za evidenciju automobila: ");
                 while (fgets(ime_datoteke_automobila, sizeof(ime_datoteke_automobila), stdin) == NULL || ime_datoteke_automobila[0] == '\n')
                     printf("Ime datoteke ne sme biti prazno. Unesite ponovo: ");
@@ -95,7 +100,7 @@ void meni_deo1(FILE *datoteka_automobila, FILE *datoteka_parkiranja, FILE *datot
                 datoteka_parkiranja = kreiraj_praznu_evidenciju_parkinga(ime_datoteke_parkiranja);
                 break;
 
-            case 2: 
+            case '2': 
                 Automobil *novi_automobil = upis_automobila(datoteka_automobila);
                 if (novi_automobil != NULL) {
                     propagiraj_unos_automobila(datoteka, *novi_automobil);
@@ -103,21 +108,21 @@ void meni_deo1(FILE *datoteka_automobila, FILE *datoteka_parkiranja, FILE *datot
                 }
                 break;
 
-            case 3: 
+            case '3': 
                 Parkiranje *novi_parkiranje = upis_parkiranja(datoteka_parkiranja, datoteka_automobila);
                 if (novi_parkiranje != NULL) {
                     propagiraj_unos_parkiranja(datoteka, datoteka_log, *novi_parkiranje);
                     free(novi_parkiranje);
                 }
                 break;
-            
-            case 4: ispisi_automobil(datoteka_automobila);
+
+            case '4': ispisi_automobil(datoteka_automobila);
                 break;
 
-            case 5: prikaz_automobila(datoteka_automobila, datoteka_parkiranja);
+            case '5': prikaz_automobila(datoteka_automobila, datoteka_parkiranja);
                 break;
 
-            case 6: 
+            case '6': 
                 
                 Automobil *modifikovani_automobil = modifikacija_automobila(datoteka_automobila);
                 if (modifikovani_automobil != NULL) {
@@ -125,8 +130,13 @@ void meni_deo1(FILE *datoteka_automobila, FILE *datoteka_parkiranja, FILE *datot
                     free(modifikovani_automobil);
                 }
                 break;
-
-            case 0:
+            case '7':
+                ispisi_datoteku_automobila(datoteka_automobila);
+                break;
+            case '8':
+                ispisi_datoteku_parkiranja(datoteka_parkiranja);
+                break;
+            case '0':
                 return;
             default:
                 break;
@@ -143,12 +153,13 @@ void meni_deo2(FILE *datoteka_automobila, FILE *datoteka_parkiranja, FILE *datot
         printf("3. Prikaz duzine boravka u beloj zoni\n");
         printf("4. Prikaz automobila proizvedenih u 2024. godini\n");
         printf("5. Logicko brisanje sloga\n");
+        printf("6. Ispis datoteke parkiranja automobila\n");
         printf("0. Nazad\n");
         printf("Unesite opciju: ");
-        scanf("%1hhd", &opcija);
+        scanf("%c", &opcija);
         while (getchar() != '\n');
         switch (opcija) {
-            case 1:
+            case '1':
                 char ime_datoteke[31];
                 printf("Unesite naziv datoteke: ");
                 while (fgets(ime_datoteke, sizeof(ime_datoteke), stdin) == NULL || ime_datoteke[0] == '\n');
@@ -157,10 +168,10 @@ void meni_deo2(FILE *datoteka_automobila, FILE *datoteka_parkiranja, FILE *datot
                 datoteka = fopen(ime_datoteke, "wb+");
                 upis_svih_automobila(datoteka, datoteka_automobila, datoteka_parkiranja);
                 break;
-            case 2:
+            case '2':
                 upis_novog_sloga(datoteka);
                 break;
-            case 3: {
+            case '3': {
                 int registarska_oznaka;
                 printf("Unesite registarsku oznaku: ");
                 scanf("%d", &registarska_oznaka);
@@ -168,10 +179,10 @@ void meni_deo2(FILE *datoteka_automobila, FILE *datoteka_parkiranja, FILE *datot
                 prikaz_duzine_bela_zona(datoteka, registarska_oznaka);
                 break;
             }
-            case 4:
+            case '4':
                 prikaz_automobila_2024(datoteka);
                 break;
-            case 5: {
+            case '5': {
                 int registarska_oznaka;
                 printf("Unesite registarsku oznaku: ");
                 scanf("%d", &registarska_oznaka);
@@ -179,7 +190,10 @@ void meni_deo2(FILE *datoteka_automobila, FILE *datoteka_parkiranja, FILE *datot
                 logicko_brisanje(datoteka, registarska_oznaka);
                 break;
             }
-            case 0:
+            case '6':
+                ispisi_datoteku_parkiranja_automobila(datoteka);
+                break;
+            case '0':
                 return;
             default:
                 printf("Nepoznata opcija. Pokusajte ponovo.\n");
@@ -195,25 +209,22 @@ void meni_deo3(FILE *datoteka, FILE *datoteka_log) {
         printf("2. Ispis registarskih oznaka i duzina boravka\n");
         printf("0. Nazad\n");
         printf("Unesite opciju: ");
-        scanf("%1hhd", &opcija);
+        scanf("%c", &opcija);
         while (getchar() != '\n');
         
         switch (opcija) {
-            case 1:
+            case '1':
                 ispisi_log_datoteku(datoteka_log);
                 break;
-            case 2:
+            case '2':
                 ispisi_log_datoteku_oznaka_duzina(datoteka_log);
                 break;
-            case 0:
+            case '0':
                 return;
             default:
                 printf("Nepoznata opcija. Pokusajte ponovo.\n");
         }
     }
 }
-
-
-
 
 

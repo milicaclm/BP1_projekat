@@ -478,3 +478,28 @@ Parkirani_automobil *pronadji_automobil(FILE *datoteka, int registarska_oznaka) 
     return NULL;
 }
 
+void ispisi_datoteku_parkiranja_automobila(FILE *datoteka_parkiranja) {
+    Baket trenutni_baket;
+    int prazni_baketi = 0;
+    rewind(datoteka_parkiranja);
+    while (fread(&trenutni_baket, sizeof(Baket), 1, datoteka_parkiranja) == 1) {
+        for (int i = 0; i < b; i++) {
+            if (trenutni_baket.automobili[i].status == PRAZAN) {
+                prazni_baketi++;
+                break;
+            }
+            if(trenutni_baket.automobili[i].status == OBRISAN) {
+                continue;
+            }
+            printf("Registarska oznaka: %d\n", trenutni_baket.automobili[i].registarska_oznaka);
+            printf("Marka: %s\n", trenutni_baket.automobili[i].marka);
+            printf("Model: %s\n", trenutni_baket.automobili[i].model);
+            printf("Godina proizvodnje: %d\n", trenutni_baket.automobili[i].godina_proizvodnje);
+            printf("Boja: %s\n", trenutni_baket.automobili[i].boja);
+            printf("Duzina boravka u beloj zoni: %d\n", trenutni_baket.automobili[i].duz_bela);
+            printf("Duzina boravka u crvenoj zoni: %d\n", trenutni_baket.automobili[i].duz_crvena);
+            printf("Duzina boravka u plavoj zoni: %d\n", trenutni_baket.automobili[i].duz_plava);
+            printf("-------------------------\n");
+        }
+    }
+}

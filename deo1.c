@@ -490,5 +490,52 @@ Automobil *modifikacija_automobila(FILE *datoteka_automobila) {
     printf("Automobil sa registarskom oznakom %d nije pronađen.\n", registarska_oznaka);
 }
 
+void ispisi_datoteku_automobila(FILE *datoteka_automobila) {
+    Blok_automobila blok_automobila;
+    rewind(datoteka_automobila);
+    while (fread(&blok_automobila, sizeof(Blok_automobila), 1, datoteka_automobila) == 1) {
+        if (blok_automobila.automobili[0].registarska_oznaka == 0) {
+            printf("Datoteka automobila je prazna.\n");
+            return;
+        }
+        printf("Datoteka automobila:\n");
+        printf("-------------------------\n");
+        for (int i = 0; i < f1; i++) {
+            if (!blok_automobila.automobili[i].registarska_oznaka) {
+                printf("\t~END~\n");
+                return;
+            }
+            printf("Registarska oznaka: %d\n", blok_automobila.automobili[i].registarska_oznaka);
+            printf("Marka: %s\n", blok_automobila.automobili[i].marka);
+            printf("Model: %s\n", blok_automobila.automobili[i].model);
+            printf("Godina proizvodnje: %d\n", blok_automobila.automobili[i].godina_proizvodnje);
+            printf("Boja: %s\n", blok_automobila.automobili[i].boja);
+            printf("-------------------------\n");
+        }
+    }
+}
 
+void ispisi_datoteku_parkiranja(FILE *datoteka_parkiranja) {
+    Blok_parkiranja blok_parkiranja;
+    rewind(datoteka_parkiranja);
+    while (fread(&blok_parkiranja, sizeof(Blok_parkiranja), 1, datoteka_parkiranja) == 1) {
+        if (blok_parkiranja.parkinga[0].identifikator == 0) {
+            printf("Datoteka parkiranja je prazna.\n");
+            return;
+        }
+        printf("Datoteka parkiranja:\n");
+        printf("-------------------------\n");
+        for (int i = 0; i < f2; i++) {
+            if (!blok_parkiranja.parkinga[i].registarska_oznaka) {
+                return; 
+            }
+            printf("Identifikator: %d\n", blok_parkiranja.parkinga[i].identifikator);
+            printf("Registarska oznaka: %d\n", blok_parkiranja.parkinga[i].registarska_oznaka);
+            printf("Datum i vreme: %s\n", blok_parkiranja.parkinga[i].datum_vreme);
+            printf("Duzina boravka: %d sati\n", blok_parkiranja.parkinga[i].duzina_boravka);
+            printf("Zona: %s\n", blok_parkiranja.parkinga[i].zona);
+            printf("-------------------------\n");
+        }
+    }
+}
 
