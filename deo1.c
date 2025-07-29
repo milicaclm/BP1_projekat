@@ -24,6 +24,8 @@ osnovu identifikatora;*/
 #define f1 4
 #define f2 5
 
+    
+
 typedef struct {
         int registarska_oznaka;
         char marka[31];
@@ -51,12 +53,28 @@ typedef struct {
 Automobil default_automobil = {0, "", "", 0, ""};
 Parkiranje default_parkiranje = {0, 0, "", 0, ""};
 
+
+
+    /**/
+
+    FILE *datoteka_automobila =  NULL;
+    FILE *datoteka_parkiranja =  NULL;
+    FILE *datoteka_parkiranja_automobila =  NULL;
+    FILE *datoteka_log = NULL;
+
+void zatvori_datoteke() {
+    if (datoteka_automobila != NULL) fclose(datoteka_automobila);
+    if (datoteka_parkiranja != NULL) fclose(datoteka_parkiranja);
+    if (datoteka_parkiranja_automobila != NULL) fclose(datoteka_parkiranja_automobila);
+    if (datoteka_log != NULL) fclose(datoteka_log);
+}
+
 FILE *otvori_datoteku(const char *ime_datoteke, const char *mod)
 {
     FILE *datoteka = fopen(ime_datoteke, mod);
     if (datoteka == NULL) {
         perror("Otvaranje datoteke nije uspelo!");
-        fcloseall();
+        zatvori_datoteke();
         exit(EXIT_FAILURE);
     }
     return datoteka;
@@ -65,14 +83,14 @@ FILE *otvori_datoteku(const char *ime_datoteke, const char *mod)
 size_t fwrite_safe(const void *buffer, size_t size, size_t count, FILE *datoteka) {
     if (fwrite(buffer, size, count, datoteka) != count) {
         perror("Upis u datoteku nije uspeo!");
-        fcloseall();
+        zatvori_datoteke();
         exit(EXIT_FAILURE);
     }
     return count;
 }
 
 
-void dodaj_prazan_blok_automobila(FILE *datoteka_automobila, Automobil slog_za_dodavanje) {
+void dodaj_prazan_blok_automobila(Automobil slog_za_dodavanje) {
     Blok_automobila blok_automobila;
     blok_automobila.automobili[0] = slog_za_dodavanje;
     for (int i = 1; i < f1; i++) {
@@ -84,7 +102,7 @@ void dodaj_prazan_blok_automobila(FILE *datoteka_automobila, Automobil slog_za_d
 
 }
 
-void dodaj_prazan_blok_parkiranja(FILE *datoteka_parkiranja, Parkiranje *slog_za_dodavanje) {
+void dodaj_prazan_blok_parkiranja(Parkiranje *slog_za_dodavanje) {
     Blok_parkiranja blok_parkiranja;
     blok_parkiranja.parkinga[0] = *slog_za_dodavanje;
     for (int i = 1; i < f2; i++) {
@@ -95,26 +113,22 @@ void dodaj_prazan_blok_parkiranja(FILE *datoteka_parkiranja, Parkiranje *slog_za
     fwrite_safe(&blok_parkiranja, sizeof(blok_parkiranja), 1, datoteka_parkiranja);
 }
 
-FILE *kreiraj_praznu_evidenciju_automobila(const char *ime_datoteke_automobila){
+void kreiraj_praznu_evidenciju_automobila(const char *ime_datoteke_automobila){
     
-    FILE *datoteka_automobila = otvori_datoteku(ime_datoteke_automobila, "wb+");
+    datoteka_automobila = otvori_datoteku(ime_datoteke_automobila, "wb+");
 
-    dodaj_prazan_blok_automobila(datoteka_automobila, default_automobil);
-    
-
-    return datoteka_automobila;
+    dodaj_prazan_blok_automobila(default_automobil);
 
 }
 
-FILE *kreiraj_praznu_evidenciju_parkinga(const char *ime_datoteke_parkinga){
-    FILE *datoteka_parkinga = otvori_datoteku(ime_datoteke_parkinga, "wb+");
+void kreiraj_praznu_evidenciju_parkinga(const char *ime_datoteke_parkinga){
+    datoteka_parkiranja = otvori_datoteku(ime_datoteke_parkinga, "wb+");
 
-    dodaj_prazan_blok_parkiranja(datoteka_parkinga, &default_parkiranje);
+    dodaj_prazan_blok_parkiranja(&default_parkiranje);
 
-    return datoteka_parkinga;
 }
 
-bool registarska_oznaka_postoji_sekvencijalna(FILE *datoteka_automobila, int registarska_oznaka) {
+bool registarska_oznaka_postoji_sekvencijalna(int registarska_oznaka) {
     Blok_automobila blok_automobila;
     rewind(datoteka_automobila);
     while (fread(&blok_automobila, sizeof(Blok_automobila), 1, datoteka_automobila) == 1) {
@@ -130,7 +144,7 @@ bool registarska_oznaka_postoji_sekvencijalna(FILE *datoteka_automobila, int reg
     return false; 
 }
 
-bool identifikator_postoji(FILE *datoteka_parkiranja, int identifikator) {
+bool identifikator_postoji(int identifikator) {
     Blok_parkiranja blok_parkiranja;
     rewind(datoteka_parkiranja);
     while (fread(&blok_parkiranja, sizeof(Blok_parkiranja), 1, datoteka_parkiranja) == 1) {
@@ -146,11 +160,11 @@ bool identifikator_postoji(FILE *datoteka_parkiranja, int identifikator) {
     return false; 
 }
 
-Automobil* upis_automobila(FILE *datoteka_automobila) {
+Automobil* upis_automobila() {
     Automobil* novi_automobil = malloc(sizeof(Automobil));
     if (!novi_automobil) {
         perror("Greska pri alokaciji memorije");
-        fcloseall();
+        zatvori_datoteke();
         exit(EXIT_FAILURE);
     }
     *novi_automobil = default_automobil;
@@ -164,7 +178,7 @@ Automobil* upis_automobila(FILE *datoteka_automobila) {
         printf("Unesite registarsku oznaku: ");
         scanf("%d", &novi_automobil->registarska_oznaka);
         while(getchar() != '\n');
-    } while (novi_automobil->registarska_oznaka <= 0 || (postoji = registarska_oznaka_postoji_sekvencijalna(datoteka_automobila, novi_automobil->registarska_oznaka)));
+    } while (novi_automobil->registarska_oznaka <= 0 || (postoji = registarska_oznaka_postoji_sekvencijalna(novi_automobil->registarska_oznaka)));
 
     printf("Unesite marku: ");
     scanf("%30s", novi_automobil->marka);
@@ -210,6 +224,7 @@ Automobil* upis_automobila(FILE *datoteka_automobila) {
 
             if (novi_automobil->registarska_oznaka == blok_automobila.automobili[i].registarska_oznaka) {
                 printf("Automobil sa zadatom registarskom oznakom vec postoji!");
+                free(novi_automobil);
                 return NULL;
             }
 
@@ -233,13 +248,13 @@ Automobil* upis_automobila(FILE *datoteka_automobila) {
                     fwrite_safe(&blok_automobila, sizeof(Blok_automobila), 1, datoteka_automobila);
                     j=0;
                 } while(fread(&blok_automobila,sizeof(Blok_automobila), 1, datoteka_automobila)==1);
-                dodaj_prazan_blok_automobila(datoteka_automobila, sledeci_slog);
+                dodaj_prazan_blok_automobila(sledeci_slog);
                 fflush(datoteka_automobila);
                 return novi_automobil;
             }
         } 
     } 
-    dodaj_prazan_blok_automobila(datoteka_automobila, *novi_automobil);
+    dodaj_prazan_blok_automobila(*novi_automobil);
     fflush(datoteka_automobila);
     return novi_automobil;
 }
@@ -262,37 +277,45 @@ bool format_datuma_vremena(int godina, int mesec, int dan, int sat, int minut) {
     return true;
 }
 
-Parkiranje *upis_parkiranja(FILE *datoteka_parkiranja, FILE *datoteka_automobila) {
+Parkiranje *upis_parkiranja(bool *samo_belo) {
     Parkiranje *novo_parkiranje = malloc(sizeof(Parkiranje));
     if (!novo_parkiranje) {
         printf("Greska pri alokaciji memorije.\n");
         free(novo_parkiranje);
-        fcloseall();
+        zatvori_datoteke();
         exit(EXIT_FAILURE);
     }
+    bool postoji = false;
     do
     {
+        if (postoji) {
+            printf("Parkiranje sa zadatim identifikatorom vec postoji!\n");
+            printf("Unesite validan identifikator.\n");
+        }
         printf("Unesite identifikator: ");
         scanf("%d", &novo_parkiranje->identifikator);
         while(getchar() != '\n');
-    } while (novo_parkiranje->identifikator <= 0 || identifikator_postoji(datoteka_parkiranja, novo_parkiranje->identifikator));
+    } while (novo_parkiranje->identifikator <= 0 || (postoji = identifikator_postoji(novo_parkiranje->identifikator)));
+
     printf("Unesite registarsku oznaku: ");
     scanf("%d", &novo_parkiranje->registarska_oznaka);
     while(getchar() != '\n');
-    if (!registarska_oznaka_postoji_sekvencijalna(datoteka_automobila, novo_parkiranje->registarska_oznaka)) {
+
+    if (!registarska_oznaka_postoji_sekvencijalna(novo_parkiranje->registarska_oznaka)) {
             printf("Registarska oznaka nije pronađena na spisku automobila.\n");
+            free(novo_parkiranje);
             return NULL;
     }
     printf("Unesite datum i vreme (npr. 15-5-2025 10:15): ");
     int godina, mesec, dan, sat, minut;
-    while (scanf("%2d-%2d-%4d %2d:%2d", &dan, &mesec, &godina, &sat, &minut) != 5 || !format_datuma_vremena(godina, mesec, dan, sat, minut)) {
+    while (scanf("%02d-%02d-%4d %02d:%02d", &dan, &mesec, &godina, &sat, &minut) != 5 || !format_datuma_vremena(godina, mesec, dan, sat, minut)) {
 
         printf("Neispravan format ili nepostojeci datum. Pokusajte ponovo: ");
         while (getchar() != '\n');
     }
     while(getchar() != '\n');
-    sprintf(novo_parkiranje->datum_vreme, "%2d-%2d-%4d %02d:%02d", dan, mesec, godina, sat, minut);
-    while(getchar() != '\n');
+    sprintf(novo_parkiranje->datum_vreme, "%d-%d-%4d %02d:%02d", dan, mesec, godina, sat, minut);
+
     printf("Unesite duzinu boravka (u satima): ");
     scanf("%d", &novo_parkiranje->duzina_boravka);
     while(getchar() != '\n');
@@ -315,34 +338,48 @@ Parkiranje *upis_parkiranja(FILE *datoteka_parkiranja, FILE *datoteka_automobila
 
     Blok_parkiranja blok_parkiranja;
     rewind(datoteka_parkiranja);
+    *samo_belo = true;
     while(fread(&blok_parkiranja, sizeof(Blok_parkiranja), 1, datoteka_parkiranja) == 1) 
     {
         for(int i=0;i<f2;++i) {
             if (novo_parkiranje->identifikator == blok_parkiranja.parkinga[i].identifikator) {
                 printf("Parkiranje sa zadatim identifikatorom vec postoji!");
+                free(novo_parkiranje);
                 return NULL;
+            }
+            if(blok_parkiranja.parkinga[i].zona[0] != 'B') {
+                *samo_belo = false;
             }
 
             if(!blok_parkiranja.parkinga[i].registarska_oznaka) {
-                blok_parkiranja.parkinga[i] = *novo_parkiranje;
                 fseek(datoteka_parkiranja, -(long)sizeof(Blok_parkiranja), SEEK_CUR);
-                fwrite_safe(&blok_parkiranja, sizeof(Blok_parkiranja), 1, datoteka_parkiranja);
+                fwrite_safe(novo_parkiranje, sizeof(Blok_parkiranja), 1, datoteka_parkiranja);
                 fflush(datoteka_parkiranja);
                 return novo_parkiranje;
             }
         } 
     } 
-    dodaj_prazan_blok_parkiranja(datoteka_parkiranja, novo_parkiranje);
+    dodaj_prazan_blok_parkiranja(novo_parkiranje);
     fflush(datoteka_parkiranja);
+    return novo_parkiranje;
 }
 
-void ispisi_automobil(FILE *datoteka_automobila) {
+void ispisi_automobil() {
     Blok_automobila blok_automobila;
     rewind(datoteka_automobila);  
+    bool postoji = true;
     int registarska_oznaka;
-    printf("Unesite registarsku oznaku automobila: ");
-    scanf("%d", &registarska_oznaka);
-    while(getchar() != '\n');
+    do
+    {
+        if (!postoji) {
+            printf("Automobil sa zadatom registarskom oznakom ne postoji!\n");
+            printf("Unesite validnu registarsku oznaku.\n");
+        }
+        printf("Unesite registarsku oznaku: ");
+        scanf("%d", &registarska_oznaka);
+        while(getchar() != '\n');
+    } while (registarska_oznaka <= 0 || !(postoji = registarska_oznaka_postoji_sekvencijalna(registarska_oznaka)));
+
     while (fread(&blok_automobila, sizeof(Blok_automobila), 1, datoteka_automobila) == 1) {
         for (int i = 0; i < f1; i++) {
             if (blok_automobila.automobili[i].registarska_oznaka == registarska_oznaka) {
@@ -359,7 +396,7 @@ void ispisi_automobil(FILE *datoteka_automobila) {
     
 }
 
-void prikaz_parkiranja(FILE *datoteka_parkiranja, int registarska_oznaka) {
+void prikaz_parkiranja(int registarska_oznaka) {
     Blok_parkiranja blok_parkiranja;
     rewind(datoteka_parkiranja);
     bool pronadjen = false;
@@ -378,6 +415,7 @@ void prikaz_parkiranja(FILE *datoteka_parkiranja, int registarska_oznaka) {
                 printf("Zona: %s\n", blok_parkiranja.parkinga[i].zona);
                 printf("Adresa bloka: %p\n", &blok_parkiranja);
                 printf("Redni broj sloga u bloku: %d\n", i);
+                printf("-------------------------\n");
                 pronadjen = true;
             }
         }
@@ -386,7 +424,7 @@ void prikaz_parkiranja(FILE *datoteka_parkiranja, int registarska_oznaka) {
     
 }
 
-void prikaz_automobila(FILE *datoteka_automobila, FILE *datoteka_parkiranja) {
+void prikaz_automobila() {
     Blok_automobila blok_automobila;
     rewind(datoteka_automobila);
     bool pronadjen = false;
@@ -404,46 +442,55 @@ void prikaz_automobila(FILE *datoteka_automobila, FILE *datoteka_parkiranja) {
             printf("Adresa bloka: %p\n", &blok_automobila);
             printf("Redni broj sloga u bloku: %d\n", i);
             printf("_________________________\n");
-            prikaz_parkiranja(datoteka_parkiranja, blok_automobila.automobili[i].registarska_oznaka);
+            prikaz_parkiranja(blok_automobila.automobili[i].registarska_oznaka);
             rewind(datoteka_parkiranja);
-            printf("-------------------------\n");
+            printf("\n");
             pronadjen = true;
         }
         
     }
 }
 
-Automobil *modifikacija_automobila(FILE *datoteka_automobila) {
-    Blok_automobila *blok_automobila;
+Automobil *modifikacija_automobila() {
+    Blok_automobila *blok_automobila = malloc(sizeof(Blok_automobila));
     rewind(datoteka_automobila);
+    bool postoji = true;
     int registarska_oznaka;
-    printf("Unesite registarsku oznaku automobila: ");
-    scanf("%d", &registarska_oznaka);
-    while(getchar() != '\n');
+    do
+    {
+        if (!postoji) {
+            printf("Automobil sa zadatom registarskom oznakom ne postoji!\n");
+            printf("Unesite validnu registarsku oznaku.\n");
+        }
+        printf("Unesite registarsku oznaku: ");
+        scanf("%d", &registarska_oznaka);
+        while(getchar() != '\n');
+    } while (registarska_oznaka <= 0 || !(postoji = registarska_oznaka_postoji_sekvencijalna(registarska_oznaka)));
     bool promenjen = false;
-    while (fread(&blok_automobila, sizeof(Blok_automobila), 1, datoteka_automobila) == 1) {
+    rewind(datoteka_automobila);
+    while (fread(blok_automobila, sizeof(Blok_automobila), 1, datoteka_automobila) == 1) {
         for (int i = 0; i < f1; i++) {
             if (!blok_automobila->automobili[i].registarska_oznaka) {
                 printf("Nema automobila u evidenciji.\n");
+                free(blok_automobila);
                 return NULL;
             }
             if (blok_automobila->automobili[i].registarska_oznaka == registarska_oznaka) {
-
                 printf("Ako ne zelite da menjate vrednost, pritisnite Enter.\n");
                 bool postoji = false;
                 char unos[31];
                 printf("Unesite marku ['%s']: ", blok_automobila->automobili[i].marka);
                 fgets(unos, sizeof(unos), stdin);
                 if (unos[0] != '\n') {
-                    unos[strcspn(unos, "\n")] = '\0';
                     strcpy(blok_automobila->automobili[i].marka, unos);
+                    strcpy(unos, "");
                     promenjen = true;
                 }
                 printf("Unesite model ['%s']: ", blok_automobila->automobili[i].model);
                 fgets(unos, sizeof(unos), stdin);
                 if (unos[0] != '\n') {
                     strcpy(blok_automobila->automobili[i].model, unos);
-                    unos[0] = '\0';
+                    strcpy(unos, "");
                     promenjen = true;
                 }
                 printf("Unesite godinu proizvodnje ['%d']: ", blok_automobila->automobili[i].godina_proizvodnje);
@@ -451,7 +498,6 @@ Automobil *modifikacija_automobila(FILE *datoteka_automobila) {
                 while (1) {
                     fgets(unos, sizeof(unos), stdin);
                     if (unos[0] == '\n') {
-
                         break; 
                     }
                     if (sscanf(unos, "%d", &god) != 1) {
@@ -466,7 +512,6 @@ Automobil *modifikacija_automobila(FILE *datoteka_automobila) {
                     promenjen = true;
                     break;
                 }
-
                 blok_automobila->automobili[i].godina_proizvodnje = god;
                 printf("Unesite boju ['%s']: ", blok_automobila->automobili[i].boja);
                 fgets(unos, sizeof(unos), stdin);
@@ -476,21 +521,30 @@ Automobil *modifikacija_automobila(FILE *datoteka_automobila) {
                     promenjen = true;
                 }
 
-
                 fseek(datoteka_automobila, -(long)sizeof(Blok_automobila), SEEK_CUR);
-                fwrite_safe(blok_automobila, sizeof(Blok_automobila), 1, datoteka_automobila);
-                if (promenjen) return &blok_automobila->automobili[i];
-                else return NULL;
-                fflush(datoteka_automobila);
-                printf("Automobil sa registarskom oznakom %d je uspešno modifikovan.\n", registarska_oznaka);
-                return &blok_automobila->automobili[i];
+                fwrite_safe(&blok_automobila, sizeof(Blok_automobila), 1, datoteka_automobila);
+                if (promenjen){
+                    fflush(datoteka_automobila);
+                    printf("Automobil sa registarskom oznakom %d je uspesno modifikovan.\n", registarska_oznaka);
+                    return &blok_automobila->automobili[i];
+                }
+                else {
+                    printf("Nije uneta nijedna nova vrednost.\n");
+                    free(blok_automobila);
+                    return NULL;
+                }
+                
+
             }
+        
         }
     }
-    printf("Automobil sa registarskom oznakom %d nije pronađen.\n", registarska_oznaka);
+    printf("Automobil sa registarskom oznakom %d nije pronadjen.\n", registarska_oznaka);
+    free(blok_automobila);
+    return NULL;
 }
 
-void ispisi_datoteku_automobila(FILE *datoteka_automobila) {
+void ispisi_datoteku_automobila() {
     Blok_automobila blok_automobila;
     rewind(datoteka_automobila);
     while (fread(&blok_automobila, sizeof(Blok_automobila), 1, datoteka_automobila) == 1) {
@@ -515,16 +569,16 @@ void ispisi_datoteku_automobila(FILE *datoteka_automobila) {
     }
 }
 
-void ispisi_datoteku_parkiranja(FILE *datoteka_parkiranja) {
+void ispisi_datoteku_parkiranja() {
     Blok_parkiranja blok_parkiranja;
     rewind(datoteka_parkiranja);
+    printf("Datoteka parkiranja:\n");
+    printf("-------------------------\n");
     while (fread(&blok_parkiranja, sizeof(Blok_parkiranja), 1, datoteka_parkiranja) == 1) {
         if (blok_parkiranja.parkinga[0].identifikator == 0) {
             printf("Datoteka parkiranja je prazna.\n");
             return;
         }
-        printf("Datoteka parkiranja:\n");
-        printf("-------------------------\n");
         for (int i = 0; i < f2; i++) {
             if (!blok_parkiranja.parkinga[i].registarska_oznaka) {
                 return; 

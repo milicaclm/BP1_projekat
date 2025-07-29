@@ -67,7 +67,7 @@ int hash_funkcija(int registarska_oznaka)
     return (registarska_oznaka % B);
 }
 
-void kreiraj_praznu_evidenciju(FILE *datoteka)
+void kreiraj_praznu_evidenciju()
 {
     Baket prazni_baket;
     for (int i = 0; i < b; i++)
@@ -76,9 +76,9 @@ void kreiraj_praznu_evidenciju(FILE *datoteka)
     }
     for (int i = 0; i < B; i++)
     {
-        fwrite_safe(&prazni_baket, sizeof(Baket), 1, datoteka);
+        fwrite_safe(&prazni_baket, sizeof(Baket), 1, datoteka_parkiranja_automobila);
     }
-    fflush(datoteka);
+    fflush(datoteka_parkiranja_automobila);
 }
 
 Parkirani_automobil vrati_podatke_parkiranog_automobila(FILE *datoteka_parkiranja, Automobil automobil)
@@ -94,6 +94,7 @@ Parkirani_automobil vrati_podatke_parkiranog_automobila(FILE *datoteka_parkiranj
     parkirani_automobil.duz_bela = 0;
     parkirani_automobil.duz_crvena = 0;
     parkirani_automobil.duz_plava = 0;
+    parkirani_automobil.status = POPUNJEN;
     while (fread(&parkiranje, sizeof(parkiranje), 1, datoteka_parkiranja))
     {
         if (parkiranje.registarska_oznaka != automobil.registarska_oznaka)
@@ -120,7 +121,7 @@ Parkirani_automobil vrati_podatke_parkiranog_automobila(FILE *datoteka_parkiranj
     return parkirani_automobil;
 }
 
-Parkirani_automobil *prvi_prolaz(FILE *datoteka, FILE *datoteka_automobila, FILE *datoteka_parkiranja)
+Parkirani_automobil *prvi_prolaz()
 {
     Automobil trenutni_automobil;
     Baket trenutni_baket;
@@ -130,10 +131,10 @@ Parkirani_automobil *prvi_prolaz(FILE *datoteka, FILE *datoteka_automobila, FILE
     if (prekoracioci == NULL)
     {
         perror("Alokacija memorije nije uspela");
-        fcloseall();
+        zatvori_datoteke();
         exit(EXIT_FAILURE);
     }
-    rewind(datoteka);
+    rewind(datoteka_parkiranja_automobila);
     rewind(datoteka_automobila);
     rewind(datoteka_parkiranja);
     while (fread(&blok_automobila, sizeof(Blok_automobila), 1, datoteka_automobila))
@@ -147,8 +148,8 @@ Parkirani_automobil *prvi_prolaz(FILE *datoteka, FILE *datoteka_automobila, FILE
             Parkirani_automobil parkirani_automobil = vrati_podatke_parkiranog_automobila(datoteka_parkiranja, trenutni_automobil);
             int indeks = hash_funkcija(parkirani_automobil.registarska_oznaka);
 
-            fseek(datoteka, indeks * sizeof(Baket), SEEK_SET);
-            fread(&trenutni_baket, sizeof(Baket), 1, datoteka);
+            fseek(datoteka_parkiranja_automobila, indeks * sizeof(Baket), SEEK_SET);
+            fread(&trenutni_baket, sizeof(Baket), 1, datoteka_parkiranja_automobila);
             bool prekoracilac = true;
 
             for (int j = 0; j < b; j++)
@@ -156,8 +157,8 @@ Parkirani_automobil *prvi_prolaz(FILE *datoteka, FILE *datoteka_automobila, FILE
                 if (trenutni_baket.automobili[j].status != POPUNJEN)
                 {
                     trenutni_baket.automobili[j] = parkirani_automobil;
-                    fseek(datoteka, indeks * sizeof(Baket), SEEK_SET);
-                    fwrite_safe(&trenutni_baket, sizeof(Baket), 1, datoteka);
+                    fseek(datoteka_parkiranja_automobila, indeks * sizeof(Baket), SEEK_SET);
+                    fwrite_safe(&trenutni_baket, sizeof(Baket), 1, datoteka_parkiranja_automobila);
                     prekoracilac = false;
                     break;
                 }
@@ -169,7 +170,7 @@ Parkirani_automobil *prvi_prolaz(FILE *datoteka, FILE *datoteka_automobila, FILE
                 if (prekoracioci == NULL)
                 {
                     perror("Realokacija memorije nije uspela");
-                    fcloseall();
+                    zatvori_datoteke();
                     exit(EXIT_FAILURE);
                 }
             }
@@ -182,7 +183,7 @@ Parkirani_automobil *prvi_prolaz(FILE *datoteka, FILE *datoteka_automobila, FILE
     return prekoracioci;
 }
 
-void drugi_prolaz(FILE *datoteka)
+void drugi_prolaz()
 {
     index_viska = 0;
     if (index_prekoracioca == 0)
@@ -190,13 +191,13 @@ void drugi_prolaz(FILE *datoteka)
         printf("Nema prekoracilaca.\n");
         return;
     }
-    rewind(datoteka);
+    rewind(datoteka_parkiranja_automobila);
     Baket trenutni_baket;
     visak = (Parkirani_automobil *)calloc(20, sizeof(Parkirani_automobil));
     if (visak == NULL)
     {
         perror("Alokacija memorije nije uspela");
-        fcloseall();
+        zatvori_datoteke();
         exit(EXIT_FAILURE);
     }
     int indeks;
@@ -208,19 +209,16 @@ void drugi_prolaz(FILE *datoteka)
         for (int j = 1; j < B; j++)
         {
             indeks = (hash_funkcija(parkirani_automobil.registarska_oznaka) + k * j) % B;
-            if(indeks == hash_funkcija(parkirani_automobil.registarska_oznaka)) {
-                break;
-            }
-            fseek(datoteka, indeks * sizeof(Baket), SEEK_SET);
-            fread(&trenutni_baket, sizeof(Baket), 1, datoteka);
+            fseek(datoteka_parkiranja_automobila, indeks * sizeof(Baket), SEEK_SET);
+            fread(&trenutni_baket, sizeof(Baket), 1, datoteka_parkiranja_automobila);
             int z = 0;
             for (; z < b; z++)
             {
                 if (trenutni_baket.automobili[z].status != POPUNJEN)
                 {
                     trenutni_baket.automobili[z] = parkirani_automobil;
-                    fseek(datoteka, -(long)sizeof(Baket), SEEK_CUR);
-                    fwrite_safe(&trenutni_baket, sizeof(Baket), 1, datoteka);
+                    fseek(datoteka_parkiranja_automobila, -(long)sizeof(Baket), SEEK_CUR);
+                    fwrite_safe(&trenutni_baket, sizeof(Baket), 1, datoteka_parkiranja_automobila);
                     je_visak = false;
                     break;
                 }
@@ -234,7 +232,7 @@ void drugi_prolaz(FILE *datoteka)
                 if (visak == NULL)
                 {
                     perror("Realokacija memorije nije uspela");
-                    fcloseall();
+                    zatvori_datoteke();
                     exit(EXIT_FAILURE);
                 }
             }
@@ -252,30 +250,30 @@ void drugi_prolaz(FILE *datoteka)
                    pa.registarska_oznaka, pa.marka, pa.model, pa.godina_proizvodnje, pa.boja);
         }
 
-        fcloseall();
+        zatvori_datoteke();
         exit(EXIT_FAILURE);
     }
 }
 
-void upis_svih_automobila(FILE *datoteka, FILE *datoteka_automobila, FILE *datoteka_parkiranja)
+void upis_svih_automobila()
 {
-    prvi_prolaz(datoteka, datoteka_automobila, datoteka_parkiranja);
-    drugi_prolaz(datoteka);
-    fflush(datoteka);
+    prvi_prolaz();
+    drugi_prolaz();
+    fflush(datoteka_parkiranja_automobila);
     free(prekoracioci);
     free(visak);
 }
 
-bool registarska_oznaka_postoji_rasuta(FILE *datoteka, int registarska_oznaka)
+bool registarska_oznaka_postoji_rasuta(int registarska_oznaka)
 {
     Baket trenutni_baket;
-    int indeks = hash_funkcija(registarska_oznaka);
+    int indeks;
 
     for (int j = 0; j < B; j++)
     {
         indeks = (hash_funkcija(registarska_oznaka) + j * k) % B;
-        fseek(datoteka, indeks * sizeof(Baket), SEEK_SET);
-        fread(&trenutni_baket, sizeof(Baket), 1, datoteka);
+        fseek(datoteka_parkiranja_automobila, indeks * sizeof(Baket), SEEK_SET);
+        fread(&trenutni_baket, sizeof(Baket), 1, datoteka_parkiranja_automobila);
         for (int i = 0; i < b; i++)
         {
             if (trenutni_baket.automobili[i].registarska_oznaka == registarska_oznaka)
@@ -288,7 +286,7 @@ bool registarska_oznaka_postoji_rasuta(FILE *datoteka, int registarska_oznaka)
     return false;
 }
 
-void upis_novog_sloga(FILE *datoteka)
+void upis_novog_sloga()
 {
     Parkirani_automobil novi_automobil;
     do
@@ -301,7 +299,7 @@ void upis_novog_sloga(FILE *datoteka)
             printf("Registarska oznaka mora biti veca od 0. Pokusajte ponovo.\n");
             continue;
         }
-    } while (novi_automobil.registarska_oznaka <= 0 || registarska_oznaka_postoji_rasuta(datoteka, novi_automobil.registarska_oznaka));
+    } while (novi_automobil.registarska_oznaka <= 0 || registarska_oznaka_postoji_rasuta(novi_automobil.registarska_oznaka));
 
     printf("Unesite marku automobila: ");
     scanf("%30s", novi_automobil.marka);
@@ -348,27 +346,24 @@ void upis_novog_sloga(FILE *datoteka)
     } while (novi_automobil.duz_plava < 0);
     novi_automobil.status = POPUNJEN;
 
-    int indeks = hash_funkcija(novi_automobil.registarska_oznaka);
+    int indeks;
     Baket trenutni_baket;
 
     for (int i = 0; i < B; i++)
     {
         indeks = (hash_funkcija(novi_automobil.registarska_oznaka) + i * k) % B;
-        if(i > 0 && indeks == hash_funkcija(novi_automobil.registarska_oznaka)){
-            break;
-        }
-        fseek(datoteka, indeks * sizeof(Baket), SEEK_SET);
-        fread(&trenutni_baket, sizeof(Baket), 1, datoteka);
+        fseek(datoteka_parkiranja_automobila, indeks * sizeof(Baket), SEEK_SET);
+        fread(&trenutni_baket, sizeof(Baket), 1, datoteka_parkiranja_automobila);
         for (int j = 0; j < b; j++)
         {
             if (trenutni_baket.automobili[j].status != POPUNJEN)
             {
                 trenutni_baket.automobili[j] = novi_automobil;
-                fseek(datoteka, -(long)sizeof(Baket), SEEK_CUR);
-                fwrite_safe(&trenutni_baket, sizeof(Baket), 1, datoteka);
+                fseek(datoteka_parkiranja_automobila, -(long)sizeof(Baket), SEEK_CUR);
+                fwrite_safe(&trenutni_baket, sizeof(Baket), 1, datoteka_parkiranja_automobila);
                 
                 printf("Novi slog uspešno upisan.\n");
-                fflush(datoteka);
+                fflush(datoteka_parkiranja_automobila);
                 return;
             }
         }
@@ -376,16 +371,16 @@ void upis_novog_sloga(FILE *datoteka)
     printf("Datoteka je puna, ne može se uneti novi slog.\n");
 }
 
-void prikaz_duzine_bela_zona(FILE *datoteka, int registarska_oznaka) {
+void prikaz_duzine_bela_zona(int registarska_oznaka) {
     Baket trenutni_baket;
     int indeks;
 
     for (int j = 0; j < B; j++) {
         indeks = (hash_funkcija(registarska_oznaka) + j * k) % B;
-        fseek(datoteka, indeks * sizeof(Baket), SEEK_SET);
-        fread(&trenutni_baket, sizeof(Baket), 1, datoteka);
+        fseek(datoteka_parkiranja_automobila, indeks * sizeof(Baket), SEEK_SET);
+        fread(&trenutni_baket, sizeof(Baket), 1, datoteka_parkiranja_automobila);
         for (int i = 0; i < b; i++) {
-            if (trenutni_baket.automobili[i].registarska_oznaka == registarska_oznaka) {
+            if (trenutni_baket.automobili[i].registarska_oznaka == registarska_oznaka && trenutni_baket.automobili[i].status == POPUNJEN) {
                 printf("Duzina boravka u beloj zoni: %d\n", trenutni_baket.automobili[i].duz_bela);
                 printf("Adresa baketa: %p\n", &trenutni_baket);
                 printf("Redni broj sloga u baketu: %d\n", i);
@@ -400,7 +395,7 @@ void prikaz_duzine_bela_zona(FILE *datoteka, int registarska_oznaka) {
     printf("Automobil sa registarskom oznakom %d nije pronadjen.\n", registarska_oznaka);
 }
 
-void prikaz_automobila_2024(FILE *datoteka) {
+void prikaz_automobila_2024() {
     Baket trenutni_baket;
     bool pronadjen = false;
 
@@ -411,10 +406,10 @@ void prikaz_automobila_2024(FILE *datoteka) {
 
     int prihod;
     for (int j = 0; j < B; j++) {
-        fseek(datoteka, j * sizeof(Baket), SEEK_SET);
-        fread(&trenutni_baket, sizeof(Baket), 1, datoteka);
+        fseek(datoteka_parkiranja_automobila, j * sizeof(Baket), SEEK_SET);
+        fread(&trenutni_baket, sizeof(Baket), 1, datoteka_parkiranja_automobila);
         for (int i = 0; i < b; i++) {
-            if (trenutni_baket.automobili[i].godina_proizvodnje == 2024) {
+            if (trenutni_baket.automobili[i].godina_proizvodnje == 2024 && trenutni_baket.automobili[i].status == POPUNJEN) {
                 prihod = trenutni_baket.automobili[i].duz_bela * 150 + trenutni_baket.automobili[i].duz_crvena * 120 + trenutni_baket.automobili[i].duz_plava * 80;
                 pronadjen = true;
                 printf("%-20d | %-10s | %-10s | %-6d | %-10s | %-8d | %-15p | %-20d | %-12s\n",
@@ -437,19 +432,19 @@ void prikaz_automobila_2024(FILE *datoteka) {
     }
 }
 
-void logicko_brisanje(FILE *datoteka, int registarska_oznaka) {
+void logicko_brisanje(int registarska_oznaka) {
     Baket trenutni_baket;
     int indeks;
 
     for (int j = 0; j < B; j++) {
         indeks = (hash_funkcija(registarska_oznaka) + j * k) % B;
-        fseek(datoteka, indeks * sizeof(Baket), SEEK_SET);
-        fread(&trenutni_baket, sizeof(Baket), 1, datoteka);
+        fseek(datoteka_parkiranja_automobila, indeks * sizeof(Baket), SEEK_SET);
+        fread(&trenutni_baket, sizeof(Baket), 1, datoteka_parkiranja_automobila);
         for (int i = 0; i < b; i++) {
             if (trenutni_baket.automobili[i].registarska_oznaka == registarska_oznaka) {
                 trenutni_baket.automobili[i].status = OBRISAN;
-                fseek(datoteka, -(long)sizeof(Baket), SEEK_CUR);
-                fwrite_safe(&trenutni_baket, sizeof(Baket), 1, datoteka);
+                fseek(datoteka_parkiranja_automobila, -(long)sizeof(Baket), SEEK_CUR);
+                fwrite_safe(&trenutni_baket, sizeof(Baket), 1, datoteka_parkiranja_automobila);
                 printf("Slog sa registarskom oznakom %d je uspesno obrisan.\n", registarska_oznaka);
                 return;
             }
@@ -460,14 +455,14 @@ void logicko_brisanje(FILE *datoteka, int registarska_oznaka) {
 }
 
 
-Parkirani_automobil *pronadji_automobil(FILE *datoteka, int registarska_oznaka) {
+Parkirani_automobil *pronadji_automobil(int registarska_oznaka) {
     Baket *trenutni_baket;
     int indeks;
 
     for (int j = 0; j < B; j++) {
         indeks = (hash_funkcija(registarska_oznaka) + j * k) % B;
-        fseek(datoteka, indeks * sizeof(Baket), SEEK_SET);
-        fread(&trenutni_baket, sizeof(Baket), 1, datoteka);
+        fseek(datoteka_parkiranja_automobila, indeks * sizeof(Baket), SEEK_SET);
+        fread(&trenutni_baket, sizeof(Baket), 1, datoteka_parkiranja_automobila);
         for (int i = 0; i < b; i++) {
             if (trenutni_baket->automobili[i].registarska_oznaka == registarska_oznaka) {
                 return &trenutni_baket->automobili[i];
@@ -478,19 +473,29 @@ Parkirani_automobil *pronadji_automobil(FILE *datoteka, int registarska_oznaka) 
     return NULL;
 }
 
-void ispisi_datoteku_parkiranja_automobila(FILE *datoteka_parkiranja) {
+void ispisi_datoteku_parkiranja_automobila() {
+    if (datoteka_parkiranja_automobila == NULL) {
+        printf("Datoteka parkiranja nije otvorena.\n");
+        return;
+    }
+
     Baket trenutni_baket;
-    int prazni_baketi = 0;
     rewind(datoteka_parkiranja);
+    bool pronadjen = false;
+
+    printf("Svi parkirani automobili:\n");
+    printf("-------------------------\n");
+
     while (fread(&trenutni_baket, sizeof(Baket), 1, datoteka_parkiranja) == 1) {
         for (int i = 0; i < b; i++) {
             if (trenutni_baket.automobili[i].status == PRAZAN) {
-                prazni_baketi++;
                 break;
             }
-            if(trenutni_baket.automobili[i].status == OBRISAN) {
+            if (trenutni_baket.automobili[i].status == OBRISAN) {
                 continue;
             }
+
+            pronadjen = true;
             printf("Registarska oznaka: %d\n", trenutni_baket.automobili[i].registarska_oznaka);
             printf("Marka: %s\n", trenutni_baket.automobili[i].marka);
             printf("Model: %s\n", trenutni_baket.automobili[i].model);
@@ -501,5 +506,9 @@ void ispisi_datoteku_parkiranja_automobila(FILE *datoteka_parkiranja) {
             printf("Duzina boravka u plavoj zoni: %d\n", trenutni_baket.automobili[i].duz_plava);
             printf("-------------------------\n");
         }
+    }
+
+    if (!pronadjen) {
+        printf("Nema parkiranih automobila u evidenciji.\n");
     }
 }
