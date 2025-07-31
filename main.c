@@ -12,7 +12,7 @@ int main()
     char opcija;
 
     datoteka_automobila = otvori_datoteku("automobili.dat", "rb+"); 
-    datoteka_parkiranja = otvori_datoteku("parkiranja.dat", "wb+");
+    datoteka_parkiranja = otvori_datoteku("parkiranja.dat", "rb+");
     //datoteka_parkiranja_automobila = otvori_datoteku("parkiranja_automobila.dat", "rb+"); 
     
     
