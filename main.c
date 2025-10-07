@@ -1,20 +1,151 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
-#include "deo3.c"
-#define f1 4
-#define f2 5
+#include "funkcije.h"
+
+
+
+Automobil default_automobil = {0, "", "", 0, ""};
+Parkiranje default_parkiranje = {0, 0, "", 0, ""};
+FILE *datoteka_automobila = NULL;
+FILE *datoteka_parkiranja = NULL;
+FILE *datoteka_parkiranja_automobila = NULL;
+FILE *datoteka_log = NULL;
+Parkirani_automobil *prekoracioci = NULL;
+Parkirani_automobil *visak = NULL;
+int index_prekoracioca = 0;
+int index_viska = 0;
+Parkirani_automobil default_parkirani_automobil = {0, "", "", 0, "", 0, 0, 0, PRAZAN};
+Log default_log = {0, 0, 0};
+void automatsko_testiranje() {
+    printf("Pokrecem automatsko testiranje...\n");
+
+    //0. kreiraj datoteke
+    printf("Kreiram prazne evidencije...\n");
+    // Zatvori sve eventualno otvorene datoteke i obrisi stare fajlove da test krece od nule
+    zatvori_datoteke();
+    remove("automobili.dat");
+    remove("parkiranja.dat");
+    remove("parkiranja_automobila.dat");
+    // log moze ostati, ali za cist test ga brisemo
+    remove("log.dat");
+    // Reset globalnih pokazivaca
+    datoteka_automobila = NULL;
+    datoteka_parkiranja = NULL;
+    datoteka_parkiranja_automobila = NULL;
+    datoteka_log = NULL;
+    kreiraj_praznu_evidenciju_automobila("automobili.dat");
+    kreiraj_praznu_evidenciju_parkinga("parkiranja.dat");
+
+    // 1. Dodaj devet automobila
+    printf("Dodajem automobile...\n");
+    Automobil automobili[] = {
+        {1234, "Toyota", "Corolla", 2020, "Crvena"},
+        {5678, "Honda", "Civic", 2024, "Plava"},
+        {9101, "Ford", "Focus", 2021, "Bela"},
+        {1121, "BMW", "X5", 2022, "Crna"},
+        {3141, "Audi", "A4", 2024, "Siva"},
+        {5161, "Mercedes", "C200", 2018, "Zelena"},
+        {7181, "Volkswagen", "Golf", 2017, "Zuta"},
+        {9202, "Hyundai", "Elantra", 2023, "Narandzasta"},
+        {1023, "Kia", "Sportage", 2024, "Ljubicasta"}
+    };
+    printf("Upisujem automobile...\n");
+    // Obezbedi da tokom upisa automobila nema propagacije u rasutu datoteku
+    datoteka_parkiranja_automobila = NULL;
+    for (int i = 0; i < 9; i++) {
+        printf("Automobil: %d\n", automobili[i].registarska_oznaka);
+        upis_automobila(&automobili[i]);
+    }
+
+    // 2. Kreiraj datoteku parkiranja automobila pre dodavanja parkiranja
+    
+    printf("Dodajem parkiranja...\n");
+    Parkiranje parkiranja[10] = {
+        {1, 1234, "15-5-2025 10:15", 3, "BELA"},
+        {2, 1234, "16-5-2025 12:30", 5, "CRVENA"},
+        {3, 5678, "17-5-2025 14:00", 2, "BELA"},
+        {4, 5678, "18-5-2025 16:45", 4, "PLAVA"},
+        {5, 9101, "19-5-2025 09:00", 6, "BELA"},
+        {6, 9101, "20-5-2025 11:30", 3, "CRVENA"},
+        {7, 1121, "21-5-2025 13:15", 7, "BELA"},
+        {8, 1121, "22-5-2025 15:00", 2, "PLAVA"},
+        {9, 3141, "23-5-2025 10:00", 5, "BELA"},
+        {10, 3141, "24-5-2025 12:45", 3, "CRVENA"}
+    };
+    printf("Upisujem parkiranja...\n");
+    for (int i = 0; i < 10; i++) {
+        upis_parkiranja(&parkiranja[i]);
+    }
+
+    // 3. Kreiraj datoteku parkiranja automobila
+    printf("Kreiram datoteku parkiranja automobila...\n");
+    datoteka_parkiranja_automobila = otvori_datoteku("parkiranja_automobila.dat", "wb+");
+    kreiraj_praznu_evidenciju();
+    upis_svih_automobila();
+
+    // 4. Dodaj 10 parkiranja automobila (5 na belu zonu)
+    printf("Dodajem parkiranja automobila...\n");
+    Parkirani_automobil parkirani_automobili[] = {
+        {1234, "Toyota", "Corolla", 2020, "Crvena", 10, 5, 3, POPUNJEN},
+        {5678, "Honda", "Civic", 2019, "Plava", 7, 3, 2, POPUNJEN},
+        {9101, "Ford", "Focus", 2021, "Bela", 8, 4, 1, POPUNJEN},
+        {1121, "BMW", "X5", 2024, "Crna", 6, 2, 3, POPUNJEN},
+        {3141, "Audi", "A4", 2020, "Siva", 9, 3, 2, POPUNJEN},
+        {5161, "Mercedes", "C200", 2014, "Zelena", 5, 2, 1, POPUNJEN},
+        {7181, "Volkswagen", "Golf", 2017, "Zuta", 4, 1, 2, POPUNJEN},
+        {9202, "Hyundai", "Elantra", 2024, "Narandzasta", 3, 2, 1, POPUNJEN},
+        {1023, "Kia", "Sportage", 2024, "Ljubicasta", 7, 3, 2, POPUNJEN},
+        {1121, "BMW", "X5", 2022, "Crna", 6, 2, 3, POPUNJEN}
+    };
+    for (int i = 0; i < 10; i++) {
+        upis_novog_sloga(parkirani_automobili[i]);
+    }
+
+    // 5. Dodaj tri nova automobila
+    printf("Dodajem nove automobile...\n");
+    Automobil novi_automobili[] = {
+        {2024, "Mazda", "CX-5", 2023, "Crvena"},
+        {3035, "Subaru", "Outback", 2022, "Plava"},
+        {4046, "Tesla", "Model 3", 2021, "Bela"}
+    };
+    for (int i = 0; i < 3; i++) {
+        upis_automobila(&novi_automobili[i]);
+    }
+
+    // 6. Dodaj još pet parkiranja (2 na belu zonu)
+    printf("Dodajem dodatna parkiranja...\n");
+    Parkiranje dodatna_parkiranja[] = {
+        {11, 2024, "25-5-2025 10:15", 3, "BELA"},
+        {12, 3035, "26-5-2025 12:30", 5, "CRVENA"},
+        {13, 4046, "27-5-2025 14:00", 2, "BELA"},
+        {14, 1234, "28-5-2025 16:45", 4, "PLAVA"},
+        {15, 5678, "29-5-2025 09:00", 6, "CRVENA"}
+    };
+    for (int i = 0; i < 5; i++) {
+        upis_parkiranja(&dodatna_parkiranja[i]);
+    }
+
+    // 7. Dodaj još dva parkiranja automobila
+    printf("Dodajem dodatna parkiranja automobila...\n");
+    Parkirani_automobil dodatni_parkirani[] = {
+        {2024, "Mazda", "CX-5", 2023, "Crvena", 5, 2, 1, POPUNJEN},
+        {3035, "Subaru", "Outback", 2024, "Plava", 4, 1, 2, POPUNJEN}
+    };
+    for (int i = 0; i < 2; i++) {
+        upis_novog_sloga(dodatni_parkirani[i]);
+    }
+
+    printf("Automatsko testiranje zavrseno.\n");
+}
 
 int main()
 {
 
     char opcija;
 
-    datoteka_automobila = otvori_datoteku("automobili.dat", "rb+"); 
-    datoteka_parkiranja = otvori_datoteku("parkiranja.dat", "rb+");
-    //datoteka_parkiranja_automobila = otvori_datoteku("parkiranja_automobila.dat", "rb+"); 
-    
+
+    datoteka_automobila = fopen("automobili.dat", "rb+");
+    datoteka_parkiranja = fopen("parkiranja.dat", "rb+");
+    datoteka_parkiranja_automobila = fopen("parkiranja_automobila.dat", "rb+");
+
     
     if((datoteka_log = fopen("log.dat", "rb+")) == NULL) {
         kreiraj_datoteku_log("log.dat");
@@ -27,6 +158,7 @@ int main()
 
     while(1) {
         printf("Izaberite opciju:\n");
+        printf("t. Unos podataka za testiranje\n");
         printf("1. Upravljaj evidencijama automobila i parkiranja\n");
         printf("2. Upravljaj evidencijom parkiranja automobila\n");
         printf("3. Upravljaj log datotekom\n");
@@ -37,6 +169,10 @@ int main()
         
         switch (opcija)
         {
+
+        case 't':
+            automatsko_testiranje();
+            break;
         case '1':
             meni_deo1();
             break;
@@ -59,6 +195,8 @@ int main()
 
     return 0;
 }
+
+
 
 void meni_deo1() {
         char opcija;
@@ -83,6 +221,7 @@ void meni_deo1() {
         
         switch (opcija)
         {
+            
             case '1':
                 printf("Unesite ime datoteke za evidenciju automobila: ");
                 while (fgets(ime_datoteke_automobila, sizeof(ime_datoteke_automobila), stdin) == NULL || ime_datoteke_automobila[0] == '\n')
@@ -100,23 +239,11 @@ void meni_deo1() {
                 break;
 
             case '2': 
-                Automobil *novi_automobil = upis_automobila();
-                if (novi_automobil != NULL) {
-                    propagiraj_unos_automobila(*novi_automobil);
-                    free(novi_automobil);
-                }
+                upis_automobila(unos_automobila_sa_tastature());
                 break;
 
             case '3': 
-                bool samo_belo;
-                Parkiranje *novi_parkiranje = upis_parkiranja(&samo_belo);
-                if (novi_parkiranje != NULL) {
-                    if (samo_belo) {
-                        loguj_parkiranje(novi_parkiranje->registarska_oznaka, novi_parkiranje->duzina_boravka);
-                    }
-                    propagiraj_unos_parkiranja(*novi_parkiranje);
-                    free(novi_parkiranje);
-                }
+                upis_parkiranja(unos_parkiranja_sa_tastature());
                 break;
 
             case '4': ispisi_automobil();
@@ -173,7 +300,7 @@ void meni_deo2() {
                 upis_svih_automobila();
                 break;
             case '2':
-                upis_novog_sloga();
+                upis_novog_sloga(unos_parkiranog_automobila_sa_tastature());
                 break;
             case '3': {
                 int registarska_oznaka;

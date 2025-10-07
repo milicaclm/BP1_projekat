@@ -19,48 +19,8 @@ sloga  u  baketu,  ukoliko  je  slog  prekoračilac  prikazati  informaciju,  a 
 rezultata prazan potrebno je prikazati povratnu informaciju na standardnom izlazu;
 6.  logičko brisanje aktuelnog sloga iz aktivne datoteke;*/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
-#include "deo1.c"
-#define B 9
-#define k 1
-#define b 5
+#include "funkcije.h"
 
-typedef enum
-{
-    PRAZAN,
-    POPUNJEN,
-    OBRISAN
-} Status;
-
-typedef struct
-{
-    int registarska_oznaka;
-    char marka[31];
-    char model[31];
-    int godina_proizvodnje;
-    char boja[21];
-    int duz_bela;
-    int duz_crvena;
-    int duz_plava;
-    Status status;
-} Parkirani_automobil;
-
-typedef struct
-{
-    Parkirani_automobil automobili[b];
-    int index;
-} Baket;
-
-
-Parkirani_automobil *prekoracioci = NULL;
-Parkirani_automobil *visak = NULL;
-int index_prekoracioca = 0;
-int index_viska = 0;
-
-Parkirani_automobil default_parkirani_automobil = {0, "", "", 0, "", 0, 0, 0, PRAZAN};
 
 int hash_funkcija(int registarska_oznaka)
 {
@@ -83,6 +43,10 @@ void kreiraj_praznu_evidenciju()
 
 Parkirani_automobil vrati_podatke_parkiranog_automobila(FILE *datoteka_parkiranja, Automobil automobil)
 {
+    static int call_count = 0;
+    call_count++;
+    printf("vrati_podatke_parkiranog_automobila pozvan %d put za automobil %d\n", call_count, automobil.registarska_oznaka);
+    
     Parkirani_automobil parkirani_automobil;
     parkirani_automobil.registarska_oznaka = automobil.registarska_oznaka;
     strcpy(parkirani_automobil.marka, automobil.marka);
@@ -90,31 +54,39 @@ Parkirani_automobil vrati_podatke_parkiranog_automobila(FILE *datoteka_parkiranj
     parkirani_automobil.godina_proizvodnje = automobil.godina_proizvodnje;
     strcpy(parkirani_automobil.boja, automobil.boja);
     rewind(datoteka_parkiranja);
-    Parkiranje parkiranje;
+    
+    Blok_parkiranja blok_parkiranja;
     parkirani_automobil.duz_bela = 0;
     parkirani_automobil.duz_crvena = 0;
     parkirani_automobil.duz_plava = 0;
     parkirani_automobil.status = POPUNJEN;
-    while (fread(&parkiranje, sizeof(parkiranje), 1, datoteka_parkiranja))
+    
+    while (fread(&blok_parkiranja, sizeof(Blok_parkiranja), 1, datoteka_parkiranja) == 1)
     {
-        if (parkiranje.registarska_oznaka != automobil.registarska_oznaka)
-            continue;
+        for (int i = 0; i < f2; i++) {
+            if (!blok_parkiranja.parkinga[i].registarska_oznaka) {
+                break; // No more parking records in this block
+            }
+            
+            if (blok_parkiranja.parkinga[i].registarska_oznaka != automobil.registarska_oznaka)
+                continue;
 
-        if (strcmp(parkiranje.zona, "BELA") == 0)
-        {
-            parkirani_automobil.duz_bela += parkiranje.duzina_boravka;
-        }
-        else if (strcmp(parkiranje.zona, "CRVENA") == 0)
-        {
-            parkirani_automobil.duz_crvena += parkiranje.duzina_boravka;
-        }
-        else if (strcmp(parkiranje.zona, "PLAVA") == 0)
-        {
-            parkirani_automobil.duz_plava += parkiranje.duzina_boravka;
-        }
-        else
-        {
-            printf("Nepoznata zona: %s\n", parkiranje.zona);
+            if (strcmp(blok_parkiranja.parkinga[i].zona, "BELA") == 0)
+            {
+                parkirani_automobil.duz_bela += blok_parkiranja.parkinga[i].duzina_boravka;
+            }
+            else if (strcmp(blok_parkiranja.parkinga[i].zona, "CRVENA") == 0)
+            {
+                parkirani_automobil.duz_crvena += blok_parkiranja.parkinga[i].duzina_boravka;
+            }
+            else if (strcmp(blok_parkiranja.parkinga[i].zona, "PLAVA") == 0)
+            {
+                parkirani_automobil.duz_plava += blok_parkiranja.parkinga[i].duzina_boravka;
+            }
+            else
+            {
+                printf("Nepoznata zona: %s\n", blok_parkiranja.parkinga[i].zona);
+            }
         }
     }
 
@@ -137,14 +109,28 @@ Parkirani_automobil *prvi_prolaz()
     rewind(datoteka_parkiranja_automobila);
     rewind(datoteka_automobila);
     rewind(datoteka_parkiranja);
+    
+    printf("Pocinje prvi prolaz...\n");
+    int blok_counter = 0;
+    
     while (fread(&blok_automobila, sizeof(Blok_automobila), 1, datoteka_automobila))
     {
+        blok_counter++;
+        printf("Obradjuje se blok %d\n", blok_counter);
+        
+        if (blok_counter > 10) { // Prevent infinite loop - max 10 blocks
+            printf("UPOZORENJE: Prekoracen broj blokova, prekidam!\n");
+            break;
+        }
+        
         for (int i = 0; i < f1; i++)
         {
             if (!blok_automobila.automobili[i].registarska_oznaka)
                 continue;
 
             trenutni_automobil = blok_automobila.automobili[i];
+            printf("Obradjuje se automobil: %d\n", trenutni_automobil.registarska_oznaka);
+            
             Parkirani_automobil parkirani_automobil = vrati_podatke_parkiranog_automobila(datoteka_parkiranja, trenutni_automobil);
             int indeks = hash_funkcija(parkirani_automobil.registarska_oznaka);
 
@@ -160,6 +146,7 @@ Parkirani_automobil *prvi_prolaz()
                     fseek(datoteka_parkiranja_automobila, indeks * sizeof(Baket), SEEK_SET);
                     fwrite_safe(&trenutni_baket, sizeof(Baket), 1, datoteka_parkiranja_automobila);
                     prekoracilac = false;
+                    printf("Automobil %d upisan u baket %d, pozicija %d\n", parkirani_automobil.registarska_oznaka, indeks, j);
                     break;
                 }
             }
@@ -176,10 +163,12 @@ Parkirani_automobil *prvi_prolaz()
             }
             if (prekoracilac)
             {
+                printf("Automobil %d je prekoracilac\n", parkirani_automobil.registarska_oznaka);
                 prekoracioci[index_prekoracioca++] = parkirani_automobil;
             }
         }
     }
+    printf("Prvi prolaz zavrsen. Ukupno blokova: %d, prekoracioca: %d\n", blok_counter, index_prekoracioca);
     return prekoracioci;
 }
 
@@ -250,8 +239,6 @@ void drugi_prolaz()
                    pa.registarska_oznaka, pa.marka, pa.model, pa.godina_proizvodnje, pa.boja);
         }
 
-        zatvori_datoteke();
-        exit(EXIT_FAILURE);
     }
 }
 
@@ -260,8 +247,18 @@ void upis_svih_automobila()
     prvi_prolaz();
     drugi_prolaz();
     fflush(datoteka_parkiranja_automobila);
-    free(prekoracioci);
-    free(visak);
+    
+    // Free allocated memory and set to NULL to prevent double free
+    if (prekoracioci != NULL) {
+        free(prekoracioci);
+        prekoracioci = NULL;
+    }
+    
+    // visak is already freed in drugi_prolaz()
+    if (visak != NULL) {
+        free(visak);
+        visak = NULL;
+    }
 }
 
 bool registarska_oznaka_postoji_rasuta(int registarska_oznaka)
@@ -286,8 +283,7 @@ bool registarska_oznaka_postoji_rasuta(int registarska_oznaka)
     return false;
 }
 
-void upis_novog_sloga()
-{
+Parkirani_automobil unos_parkiranog_automobila_sa_tastature(){
     Parkirani_automobil novi_automobil;
     do
     {
@@ -345,6 +341,12 @@ void upis_novog_sloga()
         }
     } while (novi_automobil.duz_plava < 0);
     novi_automobil.status = POPUNJEN;
+    return novi_automobil;
+}
+
+void upis_novog_sloga(Parkirani_automobil novi_automobil)
+{
+    
 
     int indeks;
     Baket trenutni_baket;
@@ -368,7 +370,7 @@ void upis_novog_sloga()
             }
         }
     }
-    printf("Datoteka je puna, ne može se uneti novi slog.\n");
+    printf("Datoteka je puna, ne moze se uneti novi slog.\n");
 }
 
 void prikaz_duzine_bela_zona(int registarska_oznaka) {
@@ -462,7 +464,13 @@ Parkirani_automobil *pronadji_automobil(int registarska_oznaka) {
     for (int j = 0; j < B; j++) {
         indeks = (hash_funkcija(registarska_oznaka) + j * k) % B;
         fseek(datoteka_parkiranja_automobila, indeks * sizeof(Baket), SEEK_SET);
-        fread(&trenutni_baket, sizeof(Baket), 1, datoteka_parkiranja_automobila);
+        trenutni_baket = (Baket *)malloc(sizeof(Baket));
+        if (trenutni_baket == NULL) {
+            perror("Alokacija memorije nije uspela");
+            zatvori_datoteke();
+            exit(EXIT_FAILURE);
+        }
+        fread(trenutni_baket, sizeof(Baket), 1, datoteka_parkiranja_automobila);
         for (int i = 0; i < b; i++) {
             if (trenutni_baket->automobili[i].registarska_oznaka == registarska_oznaka) {
                 return &trenutni_baket->automobili[i];
@@ -475,18 +483,18 @@ Parkirani_automobil *pronadji_automobil(int registarska_oznaka) {
 
 void ispisi_datoteku_parkiranja_automobila() {
     if (datoteka_parkiranja_automobila == NULL) {
-        printf("Datoteka parkiranja nije otvorena.\n");
+        printf("Datoteka parkiranja automobila nije otvorena.\n");
         return;
     }
 
     Baket trenutni_baket;
-    rewind(datoteka_parkiranja);
+    rewind(datoteka_parkiranja_automobila);
     bool pronadjen = false;
 
     printf("Svi parkirani automobili:\n");
     printf("-------------------------\n");
 
-    while (fread(&trenutni_baket, sizeof(Baket), 1, datoteka_parkiranja) == 1) {
+    while (fread(&trenutni_baket, sizeof(Baket), 1, datoteka_parkiranja_automobila) == 1) {
         for (int i = 0; i < b; i++) {
             if (trenutni_baket.automobili[i].status == PRAZAN) {
                 break;

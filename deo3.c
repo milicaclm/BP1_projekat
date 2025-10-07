@@ -9,22 +9,10 @@ pratiti boravak datih klijenata u beloj zoni;
     a.  omogućiti prikaz sadržaja čitave datoteke; 
     b.  omogućiti prikaz registarske oznake i dužine boravka u beloj zoni; */
 
-#include "deo2.c"
-#define f 5
+#include "funkcije.h"
 
 
 
-typedef struct {
-    int identifikator;
-    int registarska_oznaka;
-    int duzina_boravka;
-} Log;
-
-typedef struct {
-    Log logovi[f];
-} Blok_log;
-
-Log default_log = {0, 0, 0};
 
 void dodaj_blok_log(Log log)
 {
