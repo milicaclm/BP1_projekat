@@ -394,7 +394,7 @@ void ispisi_automobil() {
             if (blok_automobila.automobili[i].registarska_oznaka == registarska_oznaka) {
                 printf("Boja: %s\n", blok_automobila.automobili[i].boja);
                 printf("Marka: %s\n", blok_automobila.automobili[i].marka);
-                printf("Adresa bloka: %p\n", &blok_automobila);
+                printf("Adresa bloka: %p\n", (void*)&blok_automobila);
                 printf("Redni broj sloga u bloku: %d\n", i);
                 return;
             }
@@ -423,7 +423,7 @@ void prikaz_parkiranja(int registarska_oznaka) {
                 printf("Datum i vreme: %s\n", blok_parkiranja.parkinga[i].datum_vreme);
                 printf("Duzina boravka: %d sati\n", blok_parkiranja.parkinga[i].duzina_boravka);
                 printf("Zona: %s\n", blok_parkiranja.parkinga[i].zona);
-                printf("Adresa bloka: %p\n", &blok_parkiranja);
+                printf("Adresa bloka: %p\n", (void*)&blok_parkiranja);
                 printf("Redni broj sloga u bloku: %d\n", i);
                 printf("-------------------------\n");
                 pronadjen = true;
@@ -450,7 +450,7 @@ void prikaz_automobila() {
             printf("Model: %s\n", blok_automobila.automobili[i].model);
             printf("Godina proizvodnje: %d\n", blok_automobila.automobili[i].godina_proizvodnje);
             printf("Boja: %s\n", blok_automobila.automobili[i].boja);
-            printf("Adresa bloka: %p\n", &blok_automobila);
+            printf("Adresa bloka: %p\n", (void*)&blok_automobila);
             printf("Redni broj sloga u bloku: %d\n", i);
             printf("_________________________\n");
             prikaz_parkiranja(blok_automobila.automobili[i].registarska_oznaka);
@@ -493,7 +493,6 @@ Automobil *modifikacija_automobila() {
             }
             if (blok_automobila->automobili[i].registarska_oznaka == registarska_oznaka) {
                 printf("Ako ne zelite da menjate vrednost, pritisnite Enter.\n");
-                bool postoji = false;
                 char unos[31];
                 printf("Unesite marku ['%s']: ", blok_automobila->automobili[i].marka);
                 fgets(unos, sizeof(unos), stdin);

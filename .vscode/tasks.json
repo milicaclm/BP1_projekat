@@ -1,0 +1,98 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build project (gcc)",
+			"type": "shell",
+			"command": "gcc",
+			"args": [
+				"-std=c11",
+				"-Wall",
+				"-Wextra",
+				"-O2",
+				"-o",
+				"a.exe",
+				"main.c",
+				"deo1.c",
+				"deo2.c",
+				"deo3.c"
+			],
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Build with debug flags",
+			"type": "shell",
+			"command": "gcc",
+			"args": [
+				"-std=c11",
+				"-Wall",
+				"-Wextra",
+				"-Wpedantic",
+				"-g",
+				"-O0",
+				"-fsanitize=address",
+				"-fsanitize=undefined",
+				"-fno-omit-frame-pointer",
+				"-D_FORTIFY_SOURCE=2",
+				"-o",
+				"a_debug.exe",
+				"main.c",
+				"deo1.c",
+				"deo2.c",
+				"deo3.c"
+			],
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Build with basic debug flags",
+			"type": "shell",
+			"command": "gcc",
+			"args": [
+				"-std=c11",
+				"-Wall",
+				"-Wextra",
+				"-g",
+				"-O0",
+				"-o",
+				"a_debug.exe",
+				"main.c",
+				"deo1.c",
+				"deo2.c",
+				"deo3.c"
+			],
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Build with fixed warnings",
+			"type": "shell",
+			"command": "gcc",
+			"args": [
+				"-Wall",
+				"-Wextra",
+				"-Wpedantic",
+				"-g",
+				"-O0",
+				"-fstack-protector-strong",
+				"main.c",
+				"deo1.c",
+				"deo2.c",
+				"deo3.c",
+				"-o",
+				"a.exe"
+			],
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": "build"
+		}
+	]
+}

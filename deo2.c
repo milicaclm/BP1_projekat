@@ -384,7 +384,7 @@ void prikaz_duzine_bela_zona(int registarska_oznaka) {
         for (int i = 0; i < b; i++) {
             if (trenutni_baket.automobili[i].registarska_oznaka == registarska_oznaka && trenutni_baket.automobili[i].status == POPUNJEN) {
                 printf("Duzina boravka u beloj zoni: %d\n", trenutni_baket.automobili[i].duz_bela);
-                printf("Adresa baketa: %p\n", &trenutni_baket);
+                printf("Adresa baketa: %p\n", (void*)&trenutni_baket);
                 printf("Redni broj sloga u baketu: %d\n", i);
                 if (j > 0) {
                     printf("Slog prekoracilac!\n");
@@ -421,7 +421,7 @@ void prikaz_automobila_2024() {
                        trenutni_baket.automobili[i].godina_proizvodnje,
                        trenutni_baket.automobili[i].boja,
                        prihod,
-                       &trenutni_baket,
+                       (void*)&trenutni_baket,
                        i,
                        (j > 0) ? "DA" : "NE");
                 printf("----------------------------------------------------------------------------------------------------------------------------------------\n");

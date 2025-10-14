@@ -136,15 +136,29 @@ void automatsko_testiranje() {
     printf("Automatsko testiranje zavrseno.\n");
 }
 
-int main()
+int main(int argc, char *argv[])
 {
 
     char opcija;
 
-
-    datoteka_automobila = fopen("automobili.dat", "rb+");
-    datoteka_parkiranja = fopen("parkiranja.dat", "rb+");
-    datoteka_parkiranja_automobila = fopen("parkiranja_automobila.dat", "rb+");
+    if(argc == 1) {
+    } else if (argc == 3)
+    {
+        
+        datoteka_automobila = otvori_datoteku(strcat(argv[1], ".dat"), "rb+");
+        datoteka_parkiranja = otvori_datoteku(strcat(argv[2], ".dat"), "rb+");
+    } else if (argc == 4)
+    {
+        datoteka_automobila = otvori_datoteku(strcat(argv[1], ".dat"), "rb+");
+        datoteka_parkiranja = otvori_datoteku(strcat(argv[2], ".dat"), "rb+");
+        datoteka_parkiranja_automobila = otvori_datoteku(strcat(argv[3], ".dat"), "rb+");
+    }
+    else
+    {
+        printf("Pogresan broj argumenata komandne linije.\n");
+        exit(EXIT_FAILURE);
+    }
+    
 
     
     if((datoteka_log = fopen("log.dat", "rb+")) == NULL) {
