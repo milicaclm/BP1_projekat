@@ -41,7 +41,6 @@ void upis_novog_sloga(Parkirani_automobil novi_automobil);
 void prikaz_duzine_bela_zona(int registarska_oznaka);
 void prikaz_automobila_2024();
 void logicko_brisanje(int registarska_oznaka);
-Parkirani_automobil *pronadji_automobil(int registarska_oznaka);
 void ispisi_datoteku_parkiranja_automobila();
 
 // Funkcije vezane za logovanje

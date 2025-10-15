@@ -283,7 +283,7 @@ Parkiranje* unos_parkiranja_sa_tastature(){
     while(getchar() != '\n');
 
     if (!registarska_oznaka_postoji_sekvencijalna(novo_parkiranje->registarska_oznaka)) {
-            printf("Registarska oznaka nije pronađena na spisku automobila.\n");
+        printf("Registarska oznaka nije pronadjena na spisku automobila.\n");
             free(novo_parkiranje);
             return NULL;
     }
@@ -394,7 +394,14 @@ void ispisi_automobil() {
             if (blok_automobila.automobili[i].registarska_oznaka == registarska_oznaka) {
                 printf("Boja: %s\n", blok_automobila.automobili[i].boja);
                 printf("Marka: %s\n", blok_automobila.automobili[i].marka);
-                printf("Adresa bloka: %p\n", (void*)&blok_automobila);
+                long pos = ftell(datoteka_automobila);
+                if (pos < 0) {
+                    perror("Greska pri ftell");
+                    return;
+                }
+                long long block_index = (pos - (long)sizeof(Blok_automobila)) / (long)sizeof(Blok_automobila);
+                unsigned long long offset = (unsigned long long)(block_index >= 0 ? block_index : 0) * (unsigned long long)sizeof(Blok_automobila);
+                printf("Adresa bloka (offset): 0x%llX\n", offset);
                 printf("Redni broj sloga u bloku: %d\n", i);
                 return;
             }
@@ -423,7 +430,15 @@ void prikaz_parkiranja(int registarska_oznaka) {
                 printf("Datum i vreme: %s\n", blok_parkiranja.parkinga[i].datum_vreme);
                 printf("Duzina boravka: %d sati\n", blok_parkiranja.parkinga[i].duzina_boravka);
                 printf("Zona: %s\n", blok_parkiranja.parkinga[i].zona);
-                printf("Adresa bloka: %p\n", (void*)&blok_parkiranja);
+                // Racunaj offset bloka parkiranja u datoteci parkiranja (ne automobila)
+                long pos = ftell(datoteka_parkiranja);
+                if (pos < 0) {
+                    perror("Greska pri ftell");
+                    return;
+                }
+                long long block_index = (pos - (long)sizeof(Blok_parkiranja)) / (long)sizeof(Blok_parkiranja);
+                unsigned long long offset = (unsigned long long)(block_index >= 0 ? block_index : 0) * (unsigned long long)sizeof(Blok_parkiranja);
+                printf("Adresa bloka (offset): 0x%llX\n", offset);
                 printf("Redni broj sloga u bloku: %d\n", i);
                 printf("-------------------------\n");
                 pronadjen = true;
@@ -450,7 +465,14 @@ void prikaz_automobila() {
             printf("Model: %s\n", blok_automobila.automobili[i].model);
             printf("Godina proizvodnje: %d\n", blok_automobila.automobili[i].godina_proizvodnje);
             printf("Boja: %s\n", blok_automobila.automobili[i].boja);
-            printf("Adresa bloka: %p\n", (void*)&blok_automobila);
+            long pos = ftell(datoteka_automobila);
+            if (pos < 0) {
+                perror("Greska pri ftell");
+                return;
+            }
+            long long block_index = (pos - (long)sizeof(Blok_automobila)) / (long)sizeof(Blok_automobila);
+            unsigned long long offset = (unsigned long long)(block_index >= 0 ? block_index : 0) * (unsigned long long)sizeof(Blok_automobila);
+            printf("Adresa bloka (offset): 0x%llX\n", offset);
             printf("Redni broj sloga u bloku: %d\n", i);
             printf("_________________________\n");
             prikaz_parkiranja(blok_automobila.automobili[i].registarska_oznaka);
@@ -497,16 +519,20 @@ Automobil *modifikacija_automobila() {
                 printf("Unesite marku ['%s']: ", blok_automobila->automobili[i].marka);
                 fgets(unos, sizeof(unos), stdin);
                 if (unos[0] != '\n') {
-                    strcpy(blok_automobila->automobili[i].marka, unos);
-                    strcpy(unos, "");
-                    promenjen = true;
+                    unos[strcspn(unos, "\n")] = '\0';
+                    if (unos[0] != '\0') {
+                        strcpy(blok_automobila->automobili[i].marka, unos);
+                        promenjen = true;
+                    }
                 }
                 printf("Unesite model ['%s']: ", blok_automobila->automobili[i].model);
                 fgets(unos, sizeof(unos), stdin);
                 if (unos[0] != '\n') {
-                    strcpy(blok_automobila->automobili[i].model, unos);
-                    strcpy(unos, "");
-                    promenjen = true;
+                    unos[strcspn(unos, "\n")] = '\0';
+                    if (unos[0] != '\0') {
+                        strcpy(blok_automobila->automobili[i].model, unos);
+                        promenjen = true;
+                    }
                 }
                 printf("Unesite godinu proizvodnje ['%d']: ", blok_automobila->automobili[i].godina_proizvodnje);
                 int god = blok_automobila->automobili[i].godina_proizvodnje;

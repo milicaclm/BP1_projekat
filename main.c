@@ -99,14 +99,19 @@ void automatsko_testiranje() {
         upis_novog_sloga(parkirani_automobili[i]);
     }
 
-    // 5. Dodaj tri nova automobila
+    // 5. Dodaj osam novih automobila (prosireno sa jos 5 na zahtev)
     printf("Dodajem nove automobile...\n");
     Automobil novi_automobili[] = {
         {2024, "Mazda", "CX-5", 2023, "Crvena"},
         {3035, "Subaru", "Outback", 2022, "Plava"},
-        {4046, "Tesla", "Model 3", 2021, "Bela"}
+        {4046, "Tesla", "Model 3", 2021, "Bela"},
+        {5050, "Peugeot", "308", 2024, "Siva"},
+        {6060, "Renault", "Clio", 2019, "Crvena"},
+        {7070, "Opel", "Astra", 2020, "Plava"},
+        {8080, "Skoda", "Octavia", 2024, "Zelena"},
+        {9090, "Fiat", "Tipo", 2021, "Bela"}
     };
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 8; i++) {
         upis_automobila(&novi_automobili[i]);
     }
 
@@ -133,6 +138,22 @@ void automatsko_testiranje() {
         upis_novog_sloga(dodatni_parkirani[i]);
     }
 
+    // 8. Dodaj jos osam parkiranja
+    printf("Dodajem jos BELA parkiranja...\n");
+    Parkiranje jos_parkiranja[] = {
+        {16, 5161, "30-5-2025 10:00", 1, "BELA"},
+        {17, 7181, "30-5-2025 12:00", 2, "BELA"},
+        {18, 9202, "30-5-2025 14:00", 1, "BELA"},
+        {19, 1023, "31-5-2025 09:30", 3, "BELA"},
+        {20, 2024, "31-5-2025 11:15", 2, "BELA"},
+        {21, 3035, "31-5-2025 13:45", 4, "BELA"},
+        {22, 4046, "01-6-2025 08:20", 1, "BELA"},
+        {23, 3141, "01-6-2025 10:10", 2, "BELA"}
+    };
+    for (int i = 0; i < 8; i++) {
+        upis_parkiranja(&jos_parkiranja[i]);
+    }
+
     printf("Automatsko testiranje zavrseno.\n");
 }
 
@@ -144,14 +165,23 @@ int main(int argc, char *argv[])
     if(argc == 1) {
     } else if (argc == 3)
     {
-        
-        datoteka_automobila = otvori_datoteku(strcat(argv[1], ".dat"), "rb+");
-        datoteka_parkiranja = otvori_datoteku(strcat(argv[2], ".dat"), "rb+");
+        char fajl1[260];
+        char fajl2[260];
+        snprintf(fajl1, sizeof(fajl1), "%s.dat", argv[1]);
+        snprintf(fajl2, sizeof(fajl2), "%s.dat", argv[2]);
+        datoteka_automobila = otvori_datoteku(fajl1, "rb+");
+        datoteka_parkiranja = otvori_datoteku(fajl2, "rb+");
     } else if (argc == 4)
     {
-        datoteka_automobila = otvori_datoteku(strcat(argv[1], ".dat"), "rb+");
-        datoteka_parkiranja = otvori_datoteku(strcat(argv[2], ".dat"), "rb+");
-        datoteka_parkiranja_automobila = otvori_datoteku(strcat(argv[3], ".dat"), "rb+");
+        char fajl1[260];
+        char fajl2[260];
+        char fajl3[260];
+        snprintf(fajl1, sizeof(fajl1), "%s.dat", argv[1]);
+        snprintf(fajl2, sizeof(fajl2), "%s.dat", argv[2]);
+        snprintf(fajl3, sizeof(fajl3), "%s.dat", argv[3]);
+        datoteka_automobila = otvori_datoteku(fajl1, "rb+");
+        datoteka_parkiranja = otvori_datoteku(fajl2, "rb+");
+        datoteka_parkiranja_automobila = otvori_datoteku(fajl3, "rb+");
     }
     else
     {
@@ -252,13 +282,27 @@ void meni_deo1() {
                 kreiraj_praznu_evidenciju_parkinga(ime_datoteke_parkiranja);
                 break;
 
-            case '2': 
-                upis_automobila(unos_automobila_sa_tastature());
+            case '2': {
+                Automobil *ua = unos_automobila_sa_tastature();
+                if (ua) {
+                    upis_automobila(ua);
+                    free(ua);
+                } else {
+                    printf("Unos automobila je otkazan ili neuspesan.\n");
+                }
                 break;
+            }
 
-            case '3': 
-                upis_parkiranja(unos_parkiranja_sa_tastature());
+            case '3': {
+                Parkiranje *np = unos_parkiranja_sa_tastature();
+                if (np) {
+                    upis_parkiranja(np);
+                    free(np);
+                } else {
+                    printf("Unos parkiranja je otkazan ili neuspesan.\n");
+                }
                 break;
+            }
 
             case '4': ispisi_automobil();
                 break;
@@ -266,14 +310,14 @@ void meni_deo1() {
             case '5': prikaz_automobila();
                 break;
 
-            case '6': 
-
+            case '6': {
                 Automobil *modifikovani_automobil = modifikacija_automobila();
                 if (modifikovani_automobil != NULL) {
                     propagiraj_modifikaciju_automobila(*modifikovani_automobil);
                     free(modifikovani_automobil);
                 }
                 break;
+            }
             case '7':
                 ispisi_datoteku_automobila();
                 break;
@@ -292,7 +336,7 @@ void meni_deo2() {
     char opcija;
     while (1) {
         printf("Izaberite opciju:\n");
-        printf("1. Upis svih automobila\n");
+        printf("1. Formiranje datoteke\n");
         printf("2. Upis novog sloga\n");
         printf("3. Prikaz duzine boravka u beloj zoni\n");
         printf("4. Prikaz automobila proizvedenih u 2024. godini\n");
@@ -303,7 +347,7 @@ void meni_deo2() {
         scanf("%c", &opcija);
         while (getchar() != '\n');
         switch (opcija) {
-            case '1':
+            case '1': {
                 char ime_datoteke[31];
                 printf("Unesite naziv datoteke: ");
                 while (fgets(ime_datoteke, sizeof(ime_datoteke), stdin) == NULL || ime_datoteke[0] == '\n');
@@ -313,6 +357,7 @@ void meni_deo2() {
                 kreiraj_praznu_evidenciju();
                 upis_svih_automobila();
                 break;
+            }
             case '2':
                 upis_novog_sloga(unos_parkiranog_automobila_sa_tastature());
                 break;

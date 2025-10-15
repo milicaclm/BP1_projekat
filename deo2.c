@@ -273,7 +273,7 @@ bool registarska_oznaka_postoji_rasuta(int registarska_oznaka)
         fread(&trenutni_baket, sizeof(Baket), 1, datoteka_parkiranja_automobila);
         for (int i = 0; i < b; i++)
         {
-            if (trenutni_baket.automobili[i].registarska_oznaka == registarska_oznaka)
+            if (trenutni_baket.automobili[i].registarska_oznaka == registarska_oznaka && trenutni_baket.automobili[i].status == POPUNJEN)
             {
                 return true;
             }
@@ -347,7 +347,10 @@ Parkirani_automobil unos_parkiranog_automobila_sa_tastature(){
 void upis_novog_sloga(Parkirani_automobil novi_automobil)
 {
     
-
+    if(registarska_oznaka_postoji_rasuta(novi_automobil.registarska_oznaka)) {
+        printf("Automobil sa registarskom oznakom %d vec postoji u datoteci.\n", novi_automobil.registarska_oznaka);
+        return;
+    }
     int indeks;
     Baket trenutni_baket;
 
@@ -364,7 +367,7 @@ void upis_novog_sloga(Parkirani_automobil novi_automobil)
                 fseek(datoteka_parkiranja_automobila, -(long)sizeof(Baket), SEEK_CUR);
                 fwrite_safe(&trenutni_baket, sizeof(Baket), 1, datoteka_parkiranja_automobila);
                 
-                printf("Novi slog uspešno upisan.\n");
+                printf("Novi slog uspesno upisan.\n");
                 fflush(datoteka_parkiranja_automobila);
                 return;
             }
@@ -384,9 +387,10 @@ void prikaz_duzine_bela_zona(int registarska_oznaka) {
         for (int i = 0; i < b; i++) {
             if (trenutni_baket.automobili[i].registarska_oznaka == registarska_oznaka && trenutni_baket.automobili[i].status == POPUNJEN) {
                 printf("Duzina boravka u beloj zoni: %d\n", trenutni_baket.automobili[i].duz_bela);
-                printf("Adresa baketa: %p\n", (void*)&trenutni_baket);
+                unsigned long long offset = (unsigned long long)indeks * (unsigned long long)sizeof(Baket);
+                printf("Adresa baketa (offset): 0x%llX\n", offset);
                 printf("Redni broj sloga u baketu: %d\n", i);
-                if (j > 0) {
+                if (indeks != hash_funkcija(registarska_oznaka)) {
                     printf("Slog prekoracilac!\n");
                 }
                 return;
@@ -414,16 +418,18 @@ void prikaz_automobila_2024() {
             if (trenutni_baket.automobili[i].godina_proizvodnje == 2024 && trenutni_baket.automobili[i].status == POPUNJEN) {
                 prihod = trenutni_baket.automobili[i].duz_bela * 150 + trenutni_baket.automobili[i].duz_crvena * 120 + trenutni_baket.automobili[i].duz_plava * 80;
                 pronadjen = true;
-                printf("%-20d | %-10s | %-10s | %-6d | %-10s | %-8d | %-15p | %-20d | %-12s\n",
+                unsigned long long addr = (unsigned long long)j * (unsigned long long)sizeof(Baket);
+                int h = hash_funkcija(trenutni_baket.automobili[i].registarska_oznaka);
+                printf("%-20d | %-10s | %-10s | %-6d | %-10s | %-8d | 0x%-13llX | %-20d | %-12s\n",
                        trenutni_baket.automobili[i].registarska_oznaka,
                        trenutni_baket.automobili[i].marka,
                        trenutni_baket.automobili[i].model,
                        trenutni_baket.automobili[i].godina_proizvodnje,
                        trenutni_baket.automobili[i].boja,
                        prihod,
-                       (void*)&trenutni_baket,
+                       addr,
                        i,
-                       (j > 0) ? "DA" : "NE");
+                       (j != h) ? "DA" : "NE");
                 printf("----------------------------------------------------------------------------------------------------------------------------------------\n");
             }
         }
@@ -453,32 +459,7 @@ void logicko_brisanje(int registarska_oznaka) {
         }
     }
 
-    printf("Automobil sa registarskom oznakom %d nije pronađen.\n", registarska_oznaka);
-}
-
-
-Parkirani_automobil *pronadji_automobil(int registarska_oznaka) {
-    Baket *trenutni_baket;
-    int indeks;
-
-    for (int j = 0; j < B; j++) {
-        indeks = (hash_funkcija(registarska_oznaka) + j * k) % B;
-        fseek(datoteka_parkiranja_automobila, indeks * sizeof(Baket), SEEK_SET);
-        trenutni_baket = (Baket *)malloc(sizeof(Baket));
-        if (trenutni_baket == NULL) {
-            perror("Alokacija memorije nije uspela");
-            zatvori_datoteke();
-            exit(EXIT_FAILURE);
-        }
-        fread(trenutni_baket, sizeof(Baket), 1, datoteka_parkiranja_automobila);
-        for (int i = 0; i < b; i++) {
-            if (trenutni_baket->automobili[i].registarska_oznaka == registarska_oznaka) {
-                return &trenutni_baket->automobili[i];
-            }
-        }
-    }
-
-    return NULL;
+    printf("Automobil sa registarskom oznakom %d nije pronadjen.\n", registarska_oznaka);
 }
 
 void ispisi_datoteku_parkiranja_automobila() {

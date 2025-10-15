@@ -48,6 +48,11 @@ void propagiraj_unos_automobila(Automobil novi_automobil)
     if(datoteka_parkiranja_automobila == NULL) {
         return;
     }
+    
+    if(registarska_oznaka_postoji_rasuta(novi_automobil.registarska_oznaka)) {
+        return;
+    }
+    
     Baket trenutni_baket;
     Parkirani_automobil novi_parkirani_automobil;
     novi_parkirani_automobil.registarska_oznaka = novi_automobil.registarska_oznaka;
@@ -75,13 +80,13 @@ void propagiraj_unos_automobila(Automobil novi_automobil)
                 fseek(datoteka_parkiranja_automobila, -(long)sizeof(Baket), SEEK_CUR);
                 fwrite_safe(&trenutni_baket, sizeof(Baket), 1, datoteka_parkiranja_automobila);
                 
-                printf("Novi slog uspešno upisan.\n");
+                printf("Novi slog uspesno upisan.\n");
                 fflush(datoteka_parkiranja_automobila);
                 return;
             }
         }
     }
-    printf("Datoteka je puna, ne može se uneti novi slog.\n");
+    printf("Datoteka je puna, ne moze se uneti novi slog.\n");
 }
 
 void propagiraj_modifikaciju_automobila(Automobil automobil)
@@ -91,30 +96,29 @@ void propagiraj_modifikaciju_automobila(Automobil automobil)
     }
     Baket trenutni_baket;
     int indeks;
-    for (int i = 0; i < B; i++)
-    {
+    for (int i = 0; i < B; i++) {
         indeks = (hash_funkcija(automobil.registarska_oznaka) + i * k) % B;
         fseek(datoteka_parkiranja_automobila, indeks * sizeof(Baket), SEEK_SET);
-        fread(&trenutni_baket, sizeof(Baket), 1, datoteka_parkiranja_automobila);
-        for (int j = 0; j < b; j++)
-        {
-            if (trenutni_baket.automobili[j].status != POPUNJEN)
-            {
-                trenutni_baket.automobili[j].registarska_oznaka = automobil.registarska_oznaka;
+        if (fread(&trenutni_baket, sizeof(Baket), 1, datoteka_parkiranja_automobila) != 1) {
+            break; // neocekivan kraj
+        }
+        for (int j = 0; j < b; j++) {
+            if (trenutni_baket.automobili[j].status == POPUNJEN &&
+                trenutni_baket.automobili[j].registarska_oznaka == automobil.registarska_oznaka) {
+                // Azuriraj samo opisna polja – ne diramo akumulirane duzine zona
                 strcpy(trenutni_baket.automobili[j].marka, automobil.marka);
                 strcpy(trenutni_baket.automobili[j].model, automobil.model);
                 trenutni_baket.automobili[j].godina_proizvodnje = automobil.godina_proizvodnje;
                 strcpy(trenutni_baket.automobili[j].boja, automobil.boja);
-                trenutni_baket.automobili[j].status = POPUNJEN;
                 fseek(datoteka_parkiranja_automobila, -(long)sizeof(Baket), SEEK_CUR);
                 fwrite_safe(&trenutni_baket, sizeof(Baket), 1, datoteka_parkiranja_automobila);
-                printf("Novi slog uspešno upisan.\n");
                 fflush(datoteka_parkiranja_automobila);
+                printf("Automobil %d azuriran u rasutoj datoteci.\n", automobil.registarska_oznaka);
                 return;
             }
         }
     }
-    printf("Automobil nije pronađen.\n");
+    printf("Automobil %d nije pronadjen u rasutoj datoteci za azuriranje.\n", automobil.registarska_oznaka);
 }
 void loguj_parkiranje(int registarska_oznaka, int duzina_boravka) {
     if (datoteka_log == NULL) {
@@ -163,7 +167,8 @@ void propagiraj_unos_parkiranja(Parkiranje parkiranje)
         fread(&trenutni_baket, sizeof(Baket), 1, datoteka_parkiranja_automobila);
         for (int j = 0; j < b; j++)
         {
-            if (trenutni_baket.automobili[j].registarska_oznaka == parkiranje.registarska_oznaka)
+            if (trenutni_baket.automobili[j].status == POPUNJEN &&
+                trenutni_baket.automobili[j].registarska_oznaka == parkiranje.registarska_oznaka)
             {
                 switch (parkiranje.zona[0]) {
                     case 'B':
@@ -183,13 +188,13 @@ void propagiraj_unos_parkiranja(Parkiranje parkiranje)
                 }
                 fseek(datoteka_parkiranja_automobila, -(long)sizeof(Baket), SEEK_CUR);
                 fwrite_safe(&trenutni_baket, sizeof(Baket), 1, datoteka_parkiranja_automobila);
-                printf("Novi slog uspesno upisan.\n");
+                printf("Slog je azuriran u rasutoj datoteci.\n");
                 fflush(datoteka_parkiranja_automobila);
                 return;
             }
         }
     }
-    printf("Datoteka je puna, ne moze se uneti novi slog.\n");
+    printf("Automobil sa registarskom oznakom %d nije pronadjen u rasutoj datoteci.\n", parkiranje.registarska_oznaka);
 }
 
 
