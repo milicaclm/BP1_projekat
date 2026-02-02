@@ -495,6 +495,7 @@ void ispisi_datoteku_parkiranja_automobila() {
             printf("Duzina boravka u plavoj zoni: %d\n", trenutni_baket.automobili[i].duz_plava);
             printf("-------------------------\n");
         }
+        printf("_______________________________________________\n");
     }
 
     if (!pronadjen) {
